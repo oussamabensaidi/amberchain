@@ -34,72 +34,58 @@ const LocationInput = ({
   const inputRef = useRef(null)
   const suggestionsRef = useRef(null)
 
-  // Debounced search function
-  const searchLocations = async (query) => {
-    if (query.length < 3) {
-      setSuggestions([])
-      return
-    }
-
-    setIsLoading(true)
-
-    try {
-      let url, response, data, transformedResults
-
-      if (mode === "sea") {
-        // Search for ports using Nominatim with port keyword
-        url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " port")}&format=json&limit=10&addressdetails=1`
-        response = await fetch(url)
-        data = await response.json()
-        transformedResults = (data || []).map(item => ({
-          display_name: item.display_name,
-          name: item.name || item.display_name.split(',')[0],
-          lat: item.lat,
-          lng: item.lon
-        }))
-      } else if (mode === "air") {
-        // Search for airports using Nominatim with airport keyword
-        url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " airport")}&format=json&limit=10&addressdetails=1`
-        response = await fetch(url)
-        data = await response.json()
-        transformedResults = (data || []).map(item => ({
-          display_name: item.display_name,
-          name: item.name || item.display_name.split(',')[0],
-          lat: item.lat,
-          lng: item.lon
-        }))
-      } else if (mode === "rail") {
-        // Search for train stations using Nominatim with station keyword
-        url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " station")}&format=json&limit=10&addressdetails=1`
-        response = await fetch(url)
-        data = await response.json()
-        transformedResults = (data || []).map(item => ({
-          display_name: item.display_name,
-          name: item.name || item.display_name.split(',')[0],
-          lat: item.lat,
-          lng: item.lon
-        }))
-      } else {
-        // Default: search for general addresses/places
-        url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=10&addressdetails=1`
-        response = await fetch(url)
-        data = await response.json()
-        transformedResults = (data || []).map(item => ({
-          display_name: item.display_name,
-          name: item.name || item.display_name.split(',')[0],
-          lat: item.lat,
-          lng: item.lon
-        }))
-      }
-      
-      setSuggestions(transformedResults)
-    } catch (error) {
-      console.error("Error fetching locations:", error)
-      setSuggestions([])
-    } finally {
-      setIsLoading(false)
-    }
+const searchLocations = async (query) => {
+  if (query.length < 3) {
+    setSuggestions([])
+    return
   }
+
+  setIsLoading(true)
+
+  try {
+    // Add the mode as a keyword to the search to help the API prioritize results
+    const searchQuery = mode && mode !== 'place' ? `${query} ${mode}` : query;
+    
+    // Photon API is free, fast, and needs no API Key
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(searchQuery)}&limit=10`;
+    
+    const response = await fetch(url)
+    const data = await response.json()
+
+    const transformedResults = (data.features || []).map(feature => {
+      const p = feature.properties
+      
+      // Photon provides clean properties, but we provide fallbacks just in case
+      const city = p.city || p.town || p.district || "";
+      const country = p.country || "";
+      const countryCode = p.countrycode ? p.countrycode.toUpperCase() : "";
+      
+      // Construct a clean display name if the API one is too messy
+      const cleanName = p.name || "";
+      const displayParts = [cleanName, city, country].filter(Boolean);
+      
+      return {
+        id: p.osm_id || Math.random(),
+        name: cleanName,
+        display_name: displayParts.join(", "),
+        city: city,
+        country: country,
+        countryCode: countryCode,
+        lat: feature.geometry.coordinates[1],
+        lon: feature.geometry.coordinates[0],
+        locationType: mode ? mode.toUpperCase() : "PLACE",
+        raw: p
+      }
+    })
+
+    setSuggestions(transformedResults)
+  } catch (error) {
+    console.error("Error fetching locations:", error)
+    setSuggestions([])
+  } finally {
+    setIsLoading(false)
+  }
+}
 
   // Debounce the search
   useEffect(() => {
@@ -123,8 +109,7 @@ const LocationInput = ({
 
   // Handle suggestion selection
   const handleSuggestionClick = (suggestion) => {
-    const displayName = suggestion.display_name
-    onChange(displayName)
+    onChange(suggestion)
     setShowSuggestions(false)
     setSuggestions([])
   }

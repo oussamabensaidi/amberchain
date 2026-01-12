@@ -51,45 +51,93 @@ const LocationInput = ({
         url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " port")}&format=json&limit=10&addressdetails=1`
         response = await fetch(url)
         data = await response.json()
-        transformedResults = (data || []).map(item => ({
-          display_name: item.display_name,
-          name: item.name || item.display_name.split(',')[0],
-          lat: item.lat,
-          lng: item.lon
-        }))
+        transformedResults = (data || []).map(item => {
+          const addr = item.address || {}
+          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.county || addr.state || ""
+          const country = addr.country || ""
+          const countryCode = addr.country_code ? addr.country_code.toUpperCase() : ""
+          return {
+            display_name: item.display_name,
+            name: item.name || item.display_name.split(',')[0],
+            city,
+            country,
+            countryCode,
+            lat: item.lat,
+            lon: item.lon,
+            id: item.place_id || item.osm_id || 0,
+            locationType: "PORT",
+            raw: item
+          }
+        })
       } else if (mode === "air") {
         // Search for airports using Nominatim with airport keyword
         url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " airport")}&format=json&limit=10&addressdetails=1`
         response = await fetch(url)
         data = await response.json()
-        transformedResults = (data || []).map(item => ({
-          display_name: item.display_name,
-          name: item.name || item.display_name.split(',')[0],
-          lat: item.lat,
-          lng: item.lon
-        }))
+        transformedResults = (data || []).map(item => {
+          const addr = item.address || {}
+          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.county || addr.state || ""
+          const country = addr.country || ""
+          const countryCode = addr.country_code ? addr.country_code.toUpperCase() : ""
+          return {
+            display_name: item.display_name,
+            name: item.name || item.display_name.split(',')[0],
+            city,
+            country,
+            countryCode,
+            lat: item.lat,
+            lon: item.lon,
+            id: item.place_id || item.osm_id || 0,
+            locationType: "AIRPORT",
+            raw: item
+          }
+        })
       } else if (mode === "rail") {
         // Search for train stations using Nominatim with station keyword
         url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " station")}&format=json&limit=10&addressdetails=1`
         response = await fetch(url)
         data = await response.json()
-        transformedResults = (data || []).map(item => ({
-          display_name: item.display_name,
-          name: item.name || item.display_name.split(',')[0],
-          lat: item.lat,
-          lng: item.lon
-        }))
+        transformedResults = (data || []).map(item => {
+          const addr = item.address || {}
+          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.county || addr.state || ""
+          const country = addr.country || ""
+          const countryCode = addr.country_code ? addr.country_code.toUpperCase() : ""
+          return {
+            display_name: item.display_name,
+            name: item.name || item.display_name.split(',')[0],
+            city,
+            country,
+            countryCode,
+            lat: item.lat,
+            lon: item.lon,
+            id: item.place_id || item.osm_id || 0,
+            locationType: "RAIL",
+            raw: item
+          }
+        })
       } else {
         // Default: search for general addresses/places
         url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=10&addressdetails=1`
         response = await fetch(url)
         data = await response.json()
-        transformedResults = (data || []).map(item => ({
-          display_name: item.display_name,
-          name: item.name || item.display_name.split(',')[0],
-          lat: item.lat,
-          lng: item.lon
-        }))
+        transformedResults = (data || []).map(item => {
+          const addr = item.address || {}
+          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.county || addr.state || ""
+          const country = addr.country || ""
+          const countryCode = addr.country_code ? addr.country_code.toUpperCase() : ""
+          return {
+            display_name: item.display_name,
+            name: item.name || item.display_name.split(',')[0],
+            city,
+            country,
+            countryCode,
+            lat: item.lat,
+            lon: item.lon,
+            id: item.place_id || item.osm_id || 0,
+            locationType: "PLACE",
+            raw: item
+          }
+        })
       }
       
       setSuggestions(transformedResults)
@@ -123,8 +171,7 @@ const LocationInput = ({
 
   // Handle suggestion selection
   const handleSuggestionClick = (suggestion) => {
-    const displayName = suggestion.display_name
-    onChange(displayName)
+    onChange(suggestion)
     setShowSuggestions(false)
     setSuggestions([])
   }

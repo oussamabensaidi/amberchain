@@ -114,7 +114,19 @@ export default function ModeSelector({ mode, setField, error, forwardedRef, show
                   <LocationInput
                     id={field}
                     value={data[field] || ""}
-                    onChange={(v) => setField(field, v)}
+                    onChange={(v) => {
+                      if (v && typeof v === 'object') {
+                        setField(field, v.display_name)
+                        setField(`${field}City`, v.city)
+                        setField(`${field}Country`, v.country)
+                        setField(`${field}CountryCode`, v.countryCode)
+                        setField(`${field}Lat`, v.lat)
+                        setField(`${field}Lon`, v.lon)
+                        setField(`${field}LocationId`, v.id)
+                      } else {
+                        setField(field, v)
+                      }
+                    }}
                     placeholder={`Enter ${label}`}
                     error={errors[field]}
                     mode={data.mode}

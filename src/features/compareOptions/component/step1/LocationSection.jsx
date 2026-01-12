@@ -40,7 +40,19 @@ export default function LocationSection({ data, setField, labels, errors = {}, f
           id="pol"
           label={polLabel}
           value={data.pol || ""}
-          onChange={(v) => setField("pol", v)}
+          onChange={(v) => {
+            if (v && typeof v === 'object') {
+              setField('pol', v.display_name)
+              setField('polCity', v.city)
+              setField('polCountry', v.country)
+              setField('polCountryCode', v.countryCode)
+              setField('polLat', v.lat)
+              setField('polLon', v.lon)
+              setField('polLocationId', v.id)
+            } else {
+              setField('pol', v)
+            }
+          }}
           placeholder={`Enter ${polLabel}`}
           error={errors.pol}
           mode={data.mode}
@@ -49,7 +61,19 @@ export default function LocationSection({ data, setField, labels, errors = {}, f
           id="pod"
           label={podLabel}
           value={data.pod || ""}
-          onChange={(v) => setField("pod", v)}
+          onChange={(v) => {
+            if (v && typeof v === 'object') {
+              setField('pod', v.display_name)
+              setField('podCity', v.city)
+              setField('podCountry', v.country)
+              setField('podCountryCode', v.countryCode)
+              setField('podLat', v.lat)
+              setField('podLon', v.lon)
+              setField('podLocationId', v.id)
+            } else {
+              setField('pod', v)
+            }
+          }}
           placeholder={`Enter ${podLabel}`}
           error={errors.pod}
           mode={data.mode}
@@ -85,7 +109,19 @@ export default function LocationSection({ data, setField, labels, errors = {}, f
                   <LocationInput
                     id={field}
                     value={data[field] || ""}
-                    onChange={(v) => setField(field, v)}
+                    onChange={(v) => {
+                      if (v && typeof v === 'object') {
+                        setField(field, v.display_name)
+                        setField(`${field}City`, v.city)
+                        setField(`${field}Country`, v.country)
+                        setField(`${field}CountryCode`, v.countryCode)
+                        setField(`${field}Lat`, v.lat)
+                        setField(`${field}Lon`, v.lon)
+                        setField(`${field}LocationId`, v.id)
+                      } else {
+                        setField(field, v)
+                      }
+                    }}
                     placeholder={`Enter ${label}`}
                     error={errors[field]}
                     mode={data.mode}

@@ -11,6 +11,7 @@ import LocationSection from "./LocationSection"
 import ShipmentTypeSection from "./ShipmentTypeSection"
 import CargoTypeSection from "./CargoTypeSection"
 import BookingForm from "./bookingForm/BookingForm"
+import  transformToAPIFormat  from "../../utils/transformToAPI"
 
 import { AnimatePresence, motion as m } from "framer-motion"
 import PopUp from "./PopUp"
@@ -32,7 +33,6 @@ export default function ShipmentForm({ onFormComplete, enableServicePopup = true
   const cargoTypeRef = useRef(null)
   const submitRef = useRef(null)
   const transition = { duration: 0.35, ease: "easeOut" }
-
   // Default mode to 'combined' on initial load if not already set
   useEffect(() => {
     if (!mode) {
@@ -107,49 +107,34 @@ export default function ShipmentForm({ onFormComplete, enableServicePopup = true
   }
 
 
-
 const handleSubmit = (e) => {
   e.preventDefault();
 
   const validationErrors = validateForm();
-  if (validationErrors && Object.keys(validationErrors).length) {
-    // Set errors first
+  
+  if (Object.keys(validationErrors).length > 0) {
     setFieldErrors(validationErrors);
-    
-    // Use setTimeout to ensure the error messages are rendered before scrolling
-    setTimeout(() => {
-      // Find the first error and scroll to its section
-      const errorKeys = Object.keys(validationErrors);
-      if (errorKeys.length > 0) {
-        const firstError = errorKeys[0];
-        // Map error keys to their respective refs
-        const errorToRef = {
-          mode: modeRef,
-          shipmentType: shipmentTypeRef,
-          pol: locationsRef,
-          pod: locationsRef,
-          plor: locationsRef,
-          plod: locationsRef,
-          pickupLocation: locationsRef,
-          returnLocation: locationsRef,
-          cargoType: cargoTypeRef,
-          commodity: cargoTypeRef,
-          grossWeight: cargoTypeRef
-        };
+    setError("Please fix the errors above and try again.");
+    setShowError(true);
 
-        const targetRef = errorToRef[firstError];
-        if (targetRef?.current) {
-          targetRef.current.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-          });
-        }
-      }
-    }, 100); // Small delay to ensure DOM update
-    return;
+    // Scroll to the first error
+    setTimeout(() => {
+      const firstError = Object.keys(validationErrors)[0];
+      const errorToRef = {
+        mode: modeRef, shipmentType: shipmentTypeRef,
+        pol: locationsRef, pod: locationsRef,
+        cargoType: cargoTypeRef, commodity: cargoTypeRef,
+        grossWeight: cargoTypeRef
+      };
+      errorToRef[firstError]?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+    return; // Stop here if invalid
   }
 
-  // Clear any previous errors
+  // VALIDATION PASSED: Now transform
+  const payload = transformToAPIFormat(data);
+
+  // Clear previous errors
   setError("");
   setShowError(false);
   setFieldErrors({});
@@ -159,22 +144,35 @@ const handleSubmit = (e) => {
 
   if (requiresPopup) {
     setShowSuccessPopup(true);
-    return; // stop here, submission will continue after popup closes
+    // Note: The PopUp component needs to call completeSubmission(payload) when closed
+    return; 
   }
 
-  // Normal submission for other modes
-  completeSubmission();
+  // Final step for standard modes
+  completeSubmission(payload);
 };
 
-// Function that handles the actual submission
-const completeSubmission = () => {
-  if (onFormComplete) onFormComplete();
+// 1. Update completeSubmission to accept the payload
+const completeSubmission = async (transformedPayload) => {
+  try {
+    console.log("SENDING TO API:", transformedPayload);
+    
+    // --- ADD YOUR API CALL HERE ---
+    // const response = await axios.post('/your-endpoint', transformedPayload);
+    
+    if (onFormComplete) onFormComplete();
 
-  setTimeout(() => submitRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+    // Scroll to results/success
+    setTimeout(() => 
+      submitRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 
+    100);
 
-  console.log("Form submitted with data:", data);
+  } catch (err) {
+    console.error("Submission failed:", err);
+    setError("Failed to connect to the server. Please try again.");
+    setShowError(true);
+  }
 };
-
 
 
 

@@ -117,7 +117,19 @@ export default function ShipmentTypeSection({ mode, shipmentType, setField, erro
                         id="pickupLocation-inline"
                         label="Pickup Location"
                         value={data.pickupLocation || ""}
-                        onChange={(v) => setField("pickupLocation", v)}
+                        onChange={(v) => {
+                          if (v && typeof v === 'object') {
+                            setField('pickupLocation', v.display_name)
+                            setField('pickupCity', v.city)
+                            setField('pickupCountry', v.country)
+                            setField('pickupCountryCode', v.countryCode)
+                            setField('pickupLat', v.lat)
+                            setField('pickupLon', v.lon)
+                            setField('pickupLocationId', v.id)
+                          } else {
+                            setField('pickupLocation', v)
+                          }
+                        }}
                         placeholder="Enter pickup location"
                       />
                     )}
@@ -138,7 +150,19 @@ export default function ShipmentTypeSection({ mode, shipmentType, setField, erro
                         id="returnLocation-inline"
                         label="Return Location"
                         value={data.returnLocation || ""}
-                        onChange={(v) => setField("returnLocation", v)}
+                        onChange={(v) => {
+                          if (v && typeof v === 'object') {
+                            setField('returnLocation', v.display_name)
+                            setField('returnCity', v.city)
+                            setField('returnCountry', v.country)
+                            setField('returnCountryCode', v.countryCode)
+                            setField('returnLat', v.lat)
+                            setField('returnLon', v.lon)
+                            setField('returnLocationId', v.id)
+                          } else {
+                            setField('returnLocation', v)
+                          }
+                        }}
                         placeholder="Enter return location"
                       />
                     )}

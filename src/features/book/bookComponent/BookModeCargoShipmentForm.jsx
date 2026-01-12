@@ -314,12 +314,24 @@ export default function BookModeCargoShipmentForm({ data = {}, setField, errors 
                   <LocationInput
                     id={field}
                     value={data[field] || ""}
-                    onChange={(v) => setField(field, v)}
+                    onChange={(v) => {
+                      if (v && typeof v === 'object') {
+                        setField(field, v.display_name)
+                        setField(`${field}City`, v.city)
+                        setField(`${field}Country`, v.country)
+                        setField(`${field}CountryCode`, v.countryCode)
+                        setField(`${field}Lat`, v.lat)
+                        setField(`${field}Lon`, v.lon)
+                        setField(`${field}LocationId`, v.id)
+                      } else {
+                        setField(field, v)
+                      }
+                    }}
                     placeholder={`Enter ${label}`}
                     error={errors[field]}
                     mode={data.mode}
                   />
-                )}
+                )} 
               </div>
             )
           })}
@@ -370,10 +382,22 @@ export default function BookModeCargoShipmentForm({ data = {}, setField, errors 
                   id="pickupLocation-inline"
                   label="Pickup Location"
                   value={data.pickupLocation || ""}
-                  onChange={(v) => setField("pickupLocation", v)}
+                  onChange={(v) => {
+                    if (v && typeof v === 'object') {
+                      setField('pickupLocation', v.display_name)
+                      setField('pickupCity', v.city)
+                      setField('pickupCountry', v.country)
+                      setField('pickupCountryCode', v.countryCode)
+                      setField('pickupLat', v.lat)
+                      setField('pickupLon', v.lon)
+                      setField('pickupLocationId', v.id)
+                    } else {
+                      setField('pickupLocation', v)
+                    }
+                  }}
                   placeholder="Enter pickup location"
                 />
-              )}
+              )} 
             </div>
             <div className="bg-accent/30 p-4 rounded-lg border">
               <div className="flex items-center gap-3 mb-3">
@@ -391,10 +415,22 @@ export default function BookModeCargoShipmentForm({ data = {}, setField, errors 
                   id="returnLocation-inline"
                   label="Return Location"
                   value={data.returnLocation || ""}
-                  onChange={(v) => setField("returnLocation", v)}
+                  onChange={(v) => {
+                    if (v && typeof v === 'object') {
+                      setField('returnLocation', v.display_name)
+                      setField('returnCity', v.city)
+                      setField('returnCountry', v.country)
+                      setField('returnCountryCode', v.countryCode)
+                      setField('returnLat', v.lat)
+                      setField('returnLon', v.lon)
+                      setField('returnLocationId', v.id)
+                    } else {
+                      setField('returnLocation', v)
+                    }
+                  }}
                   placeholder="Enter return location"
                 />
-              )}
+              )} 
             </div>
           </div>
         </motion.div>
