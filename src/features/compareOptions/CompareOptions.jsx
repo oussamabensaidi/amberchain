@@ -5,7 +5,6 @@ import ShipmentForm from "./component/step1/ShipmentForm"
 import CompareResults from "./component/step2/CompareResults"
 import { useShipmentStore } from "@/store/shipmentStore"
 import { DUMMY_SHIPMENT } from "@/constants/dummyShipment"
-import { MOCK_SHIPPING_OPTIONS } from "@/constants/compareOptionsResults"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 
@@ -18,8 +17,8 @@ export default function CompareOptions({
 } = {}) {
   const { t } = useTranslation()
   const [showResults, setShowResults] = useState(false)
-  const setField = useShipmentStore((s) => s.setField)
-  const setWizardSelection = useShipmentStore((s) => s.setWizardSelection)
+  const { data, setField, setWizardSelection } = useShipmentStore()
+  const comparisonResults = data.comparisonResults || []
 
   useEffect(() => {
     if (!prefillDummy) return
@@ -56,19 +55,30 @@ export default function CompareOptions({
               Back
             </Button>
             <div className="text-sm text-muted-foreground">
-              {MOCK_SHIPPING_OPTIONS.length} options found
+              {Array.isArray(comparisonResults) && comparisonResults.length > 0 
+                ? `${comparisonResults.length} options found` 
+                : "No results available"}
             </div>
           </div>
-          {MOCK_SHIPPING_OPTIONS.map((opt) => (
-            <CompareResults
-              key={opt.id}
-              ctaLabel={resultsCtaLabel}
-              enableBookingPopup={enableBookingPopup}
-              onCtaClick={onResultsCtaClick}
-              priceOverride={opt.price}
-              resultMeta={opt}
-            />
-          ))}
+          {Array.isArray(comparisonResults) && comparisonResults.length > 0 ? (
+            comparisonResults.map((opt, index) => {
+              console.log(`📊 Result #${index + 1}:`, { id: opt.id, company: opt.company, solutionNumber: opt.solutionNumber, price: opt.price })
+              return (
+              <CompareResults
+                key={opt.id || index}
+                ctaLabel={resultsCtaLabel}
+                enableBookingPopup={enableBookingPopup}
+                onCtaClick={onResultsCtaClick}
+                priceOverride={opt.price}
+                resultMeta={opt}
+              />
+              )
+            })
+          ) : (
+            <div className="text-center text-muted-foreground py-8">
+              No comparison results available. Please submit a new quote.
+            </div>
+          )}
         </div>
       )}
     </div>

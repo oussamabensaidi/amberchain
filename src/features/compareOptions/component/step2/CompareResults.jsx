@@ -1,4 +1,4 @@
-import React from "react"
+import {useState ,useEffect} from "react"
 import { Button } from "@/components/ui/button"
 import { useShipmentStore } from "@/store/shipmentStore"
 import {
@@ -21,29 +21,65 @@ import CompareCostBreakdown from "./CompareCostBreakdown";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { BookingConfirmationPopup } from "@/components/ui/booking-confirmation-popup";
 import CompareConditions from "./CompareConditions";
-
 import BookingRoute from "@/features/bookings/components/BookingRoute";
-
-
 
 export default function CompareResults({ onBack, ctaLabel = "Book now", enableBookingPopup = true, onCtaClick, priceOverride, resultMeta, headerOnly = false, toggle_button = true, popupVariant = "booking" }) {
   const { data } = useShipmentStore()
-  const [expanded, setExpanded] = React.useState(false)
-  const [activeTab, setActiveTab] = React.useState("cost")
-  const [showConfirmationPopup, setShowConfirmationPopup] = React.useState(false)
-  const price = priceOverride ?? data.price ?? (data.mode === "Air" ? "1,200" : "-")
+  const [expanded, setExpanded] = useState(false)
+  const [activeTab, setActiveTab] = useState("cost")
+  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false)
+  const price = resultMeta?.price ?? priceOverride ?? "-"
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(false)
+  const [scheduleError, setScheduleError] = useState(null)
+  
+  // Determine button label based on price
+  const finalCtaLabel = (price === null || price === "-") ? "Pre Book" : ctaLabel
+  
+  // Debug: Log each result to verify array iteration
+  useEffect(() => {
+    console.log("🔍 CompareResults - resultMeta received:", {
+      id: resultMeta?.id,
+      company: resultMeta?.company,
+      solutionNumber: resultMeta?.solutionNumber,
+      price: resultMeta?.price,
+      scheduleExists: !!resultMeta?.schedule
+    })
+  }, [resultMeta])
+  
+  // Get schedule results from resultMeta (each result has its own schedule)
+  // Fall back to store data if resultMeta doesn't have schedule
+  const schedule = resultMeta?.schedule
+  
+  // Get shipment query context from store (parameters used for search)
+  const shipmentContext = data.shipmentQueryContext || {}
+  const shipmentData = {
+    mode: shipmentContext.mode || data.mode || "",
+    shipmentType: shipmentContext.shipmentType || data.shipmentType || "",
+    pol: shipmentContext.pol || data.pol || "",
+    pod: shipmentContext.pod || data.pod || "",
+    plor: shipmentContext.plor || data.plor || "",
+    plod: shipmentContext.plod || data.plod || "",
+    cargoType: shipmentContext.cargoType || data.cargoType || "",
+    commodity: shipmentContext.commodity || data.commodity || "",
+    grossWeight: shipmentContext.grossWeight || data.grossWeight || "",
+    pickupLocation: shipmentContext.pickupLocation || data.pickupLocation || "",
+    returnLocation: shipmentContext.returnLocation || data.returnLocation || "",
+    polCity: shipmentContext.polCity || data.polCity || "",
+    polCountry: shipmentContext.polCountry || data.polCountry || "",
+    podCity: shipmentContext.podCity || data.podCity || "",
+    podCountry: shipmentContext.podCountry || data.podCountry || "",
+  }
 
-  // Geocode the locations for the map
-  const { coordinates: originCoords, isLoading: originLoading, error: originError } = useGeocoding(data.pol)
-  const { coordinates: destinationCoords, isLoading: destLoading, error: destError } = useGeocoding(data.pod)
 
-  const mode = (data.mode || '').toLowerCase()
-  const shipmentType = (data.shipmentType || '').toUpperCase()
+
+
+  const { coordinates: originCoords, isLoading: originLoading, error: originError } = useGeocoding(shipmentData.pol)
+  const { coordinates: destinationCoords, isLoading: destLoading, error: destError } = useGeocoding(shipmentData.pod)
+
+  const mode = (shipmentData.mode || '').toLowerCase()
+  const shipmentType = (shipmentData.shipmentType || '').toUpperCase()
   const modeIconColor = "text-muted-foreground"
-
-  // Icon for cargo type (kept secondary)
-  const cargoType = data.cargoType || data.commodity || "General Cargo"
-
+  const cargoType = shipmentData.cargoType || shipmentData.commodity || "General Cargo"
   const timelineItems = []
 
   const modeLabels = {
@@ -67,48 +103,44 @@ export default function CompareResults({ onBack, ctaLabel = "Book now", enableBo
     }
   }
 
-  // POL (start)
   timelineItems.push({
     label: labels.pol,
-    title: data.pol || "—",
+    title: shipmentData.pol || "—",
     icon: <TransportationIcon className="w-5 h-5" />,
     content: null,
   })
 
-  // PLOR
-  if (data.plor) {
+  if (shipmentData.plor) {
     timelineItems.push({
       label: "",
-      title: data.plor,
+      title: shipmentData.plor,
       icon: null,
       content: (
         <span className="text-xs text-muted-foreground italic ml-6 block">
-          {data.plor}
+          {shipmentData.plor}
         </span>
       ),
       optional: true,
     })
   }
 
-  // PLOD
-  if (data.plod) {
+  if (shipmentData.plod) {
     timelineItems.push({
       label: "",
-      title: data.plod,
+      title: shipmentData.plod,
       icon: null,
       content: (
         <span className="text-xs text-muted-foreground italic ml-6 block">
-          {data.plod}
+          {shipmentData.plod}
         </span>
       ),
       optional: true,
     })
   }
 
-  // POD (end)
   timelineItems.push({
     label: labels.pod,
-    title: data.pod || "—",
+    title: shipmentData.pod || "—",
     icon: <TransportationIcon className="w-5 h-5" />,
     content: null,
   })
@@ -127,14 +159,15 @@ export default function CompareResults({ onBack, ctaLabel = "Book now", enableBo
       )}
       <CardHeader className="border-none px-8 gap-0">
         <CompareResultsHeader
-          data={data}
+          data={shipmentData}
           expanded={expanded}
           setExpanded={setExpanded}
+          scheduleData={schedule}
           price={price}
-          ctaLabel={ctaLabel}
+          resultMeta={resultMeta}
+          ctaLabel={finalCtaLabel}
           enableBookingPopup={enableBookingPopup}
           onCtaClick={onCtaClick}
-          resultMeta={resultMeta}
           toggle_button={toggle_button}
           popupVariant={popupVariant}
         />
@@ -144,6 +177,7 @@ export default function CompareResults({ onBack, ctaLabel = "Book now", enableBo
         <CardContent className="p-0 w-full">
           {expanded && (
           <div className="p-6 space-y-6 w-full" onClick={(e) => e.stopPropagation()}>
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[420px] w-full">
               <div className="lg:col-span-5 flex flex-col h-full min-w-0">
                 <div className="bg-card rounded-xl border p-6 shadow-sm flex-1 flex flex-col min-h-[400px] w-full">
@@ -188,12 +222,11 @@ export default function CompareResults({ onBack, ctaLabel = "Book now", enableBo
                 </div>
               </div>
             </div>
-            {/* Cost/Conditions toggle */}
+
             <div className="group w-full bg-card hover:bg-accent border rounded-xl shadow-sm p-4">
               <div className="flex items-center justify-between gap-3">
                 <ToggleGroup
                   type="single"
-                  
                   variant="outline"
                   value={activeTab}
                   onValueChange={(v) => v && setActiveTab(v)}
@@ -215,7 +248,6 @@ export default function CompareResults({ onBack, ctaLabel = "Book now", enableBo
                     costBreakdown={resultMeta?.costBreakdown}
                   />
                 ) : (
-                  // Lazy import to avoid circular deps; colocated component
                   <CompareConditions
                     conditions={resultMeta?.conditions}
                     fallbackTransitDays={resultMeta?.transitDays}
@@ -226,16 +258,16 @@ export default function CompareResults({ onBack, ctaLabel = "Book now", enableBo
 
             <div className="flex items-center justify-between gap-3 mt-4">
               {(() => {
-                const origin = data.pol ? data.pol.split(',')[0].trim() : null
-                const viaPlor = data.plor || null
-                const viaPlod = data.plod || null
-                const destination = data.pod ? data.pod.split(',')[0].trim() : null
+                const origin = shipmentData.pol ? shipmentData.pol.split(',')[0].trim() : null
+                const viaPlor = shipmentData.plor || null
+                const viaPlod = shipmentData.plod || null
+                const destination = shipmentData.pod ? shipmentData.pod.split(',')[0].trim() : null
                 const route = [origin, viaPlor, viaPlod, destination].filter(Boolean)
                 return route.length > 0 ? (
                   <BookingRoute route={route} />
                 ) : <div />
               })()}
-              <Button onClick={handleBookNow}>{ctaLabel}</Button>
+              <Button onClick={handleBookNow}>{finalCtaLabel}</Button>
             </div>
 
             {enableBookingPopup && (

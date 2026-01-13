@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MapPin, Search } from "lucide-react"
 import { Ship, Train, Plane, Truck } from "lucide-react"
+import { searchLocations, searchPorts, searchAirports } from "@/lib/locationSearchService"
 
 // choose icon based on mode
 const getModeIcon = (mode) => {
@@ -34,9 +35,9 @@ const LocationInput = ({
   const inputRef = useRef(null)
   const suggestionsRef = useRef(null)
 
-  // Debounced search function
-  const searchLocations = async (query) => {
-    if (query.length < 3) {
+  // Search function using local database
+  const performSearch = async (query) => {
+    if (query.length < 2) {
       setSuggestions([])
       return
     }
@@ -44,102 +45,30 @@ const LocationInput = ({
     setIsLoading(true)
 
     try {
-      let url, response, data, transformedResults
+      let results = []
 
       if (mode === "sea") {
-        // Search for ports using Nominatim with port keyword
-        url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " port")}&format=json&limit=10&addressdetails=1`
-        response = await fetch(url)
-        data = await response.json()
-        transformedResults = (data || []).map(item => {
-          const addr = item.address || {}
-          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.county || addr.state || ""
-          const country = addr.country || ""
-          const countryCode = addr.country_code ? addr.country_code.toUpperCase() : ""
-          return {
-            display_name: item.display_name,
-            name: item.name || item.display_name.split(',')[0],
-            city,
-            country,
-            countryCode,
-            lat: item.lat,
-            lon: item.lon,
-            id: item.place_id || item.osm_id || 0,
-            locationType: "PORT",
-            raw: item
-          }
-        })
+        results = await searchPorts(query)
       } else if (mode === "air") {
-        // Search for airports using Nominatim with airport keyword
-        url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " airport")}&format=json&limit=10&addressdetails=1`
-        response = await fetch(url)
-        data = await response.json()
-        transformedResults = (data || []).map(item => {
-          const addr = item.address || {}
-          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.county || addr.state || ""
-          const country = addr.country || ""
-          const countryCode = addr.country_code ? addr.country_code.toUpperCase() : ""
-          return {
-            display_name: item.display_name,
-            name: item.name || item.display_name.split(',')[0],
-            city,
-            country,
-            countryCode,
-            lat: item.lat,
-            lon: item.lon,
-            id: item.place_id || item.osm_id || 0,
-            locationType: "AIRPORT",
-            raw: item
-          }
-        })
-      } else if (mode === "rail") {
-        // Search for train stations using Nominatim with station keyword
-        url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " station")}&format=json&limit=10&addressdetails=1`
-        response = await fetch(url)
-        data = await response.json()
-        transformedResults = (data || []).map(item => {
-          const addr = item.address || {}
-          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.county || addr.state || ""
-          const country = addr.country || ""
-          const countryCode = addr.country_code ? addr.country_code.toUpperCase() : ""
-          return {
-            display_name: item.display_name,
-            name: item.name || item.display_name.split(',')[0],
-            city,
-            country,
-            countryCode,
-            lat: item.lat,
-            lon: item.lon,
-            id: item.place_id || item.osm_id || 0,
-            locationType: "RAIL",
-            raw: item
-          }
-        })
+        results = await searchAirports(query)
       } else {
-        // Default: search for general addresses/places
-        url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=10&addressdetails=1`
-        response = await fetch(url)
-        data = await response.json()
-        transformedResults = (data || []).map(item => {
-          const addr = item.address || {}
-          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.county || addr.state || ""
-          const country = addr.country || ""
-          const countryCode = addr.country_code ? addr.country_code.toUpperCase() : ""
-          return {
-            display_name: item.display_name,
-            name: item.name || item.display_name.split(',')[0],
-            city,
-            country,
-            countryCode,
-            lat: item.lat,
-            lon: item.lon,
-            id: item.place_id || item.osm_id || 0,
-            locationType: "PLACE",
-            raw: item
-          }
-        })
+        results = await searchLocations(query, "port")
       }
-      
+
+      // Transform results to expected format
+      const transformedResults = results.map(item => ({
+        display_name: item.display_name,
+        name: item.name,
+        city: item.city,
+        country: item.country,
+        countryCode: item.country_code || "",
+        lat: item.lat,
+        lon: item.lon,
+        id: item.code || item.id || 0,
+        locationType: item.locationType,
+        code: item.code,
+      }))
+
       setSuggestions(transformedResults)
     } catch (error) {
       console.error("Error fetching locations:", error)
@@ -152,8 +81,8 @@ const LocationInput = ({
   // Debounce the search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (value && value.length >= 3) {
-        searchLocations(value)
+      if (value && value.length >= 2) {
+        performSearch(value)
       } else {
         setSuggestions([])
       }

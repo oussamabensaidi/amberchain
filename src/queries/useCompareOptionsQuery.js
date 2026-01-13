@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MOCK_SHIPPING_OPTIONS } from "@/constants/compareOptionsResults";
-import { submitCompareOptions } from "@/services/CompareOptionsService";
+import  submitCompareOptions  from "@/services/CompareOptionsService";
 
 /**
  * Fetch shipping options

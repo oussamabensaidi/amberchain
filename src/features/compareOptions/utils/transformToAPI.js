@@ -25,7 +25,7 @@ function mapCargoType(sourceCargoType) {
 function transformToAPIFormat(sourceData) {
   return {
     cargoDetail: {
-      accessConditions: sourceData.accsesConditions || "EASY",
+      accessConditions: mapAccessCondition(sourceData.accsesConditions),
       cargoProbs: sourceData.probes?.numberOfCargoProbes || 0,
       coldTraitement: sourceData.coldTreatment?.required || false,
       drainHolesOpen: sourceData.probes?.drainHoles || false,
@@ -54,7 +54,7 @@ function transformToAPIFormat(sourceData) {
       },
       truckType: sourceData.cargo?.truckType || "",
       unNumber: sourceData.cargo?.unNumber ? parseInt(sourceData.cargo.unNumber.replace("UN", "")) : 0,
-      unit: sourceData.cargo?.lengthMetrics === "m" ? "METER" : "INCH",
+      unit: sourceData.cargo?.lengthMetrics === "m" ? "Meter" : "INCH",
       ventilationVolume: sourceData.probes?.ventilationVolume || "",
       volume: sourceData.cargo?.volume || "",
       width: parseFloat(sourceData.cargo?.width) || 0
@@ -227,5 +227,13 @@ function extractContainerTypeCategory(containerType) {
   return "STANDARD";
 }
 
+function mapAccessCondition(input) {
+  if (!input) return "EASY"; // default
+  const val = input.toLowerCase();
+  if (val.includes("limited")) return "LIMITED";
+  if (val.includes("difficult") || val.includes("hard") || val.includes("restricted")) return "DIFFICULT";
+  // everything else
+  return "EASY";
+}
 
 export default transformToAPIFormat

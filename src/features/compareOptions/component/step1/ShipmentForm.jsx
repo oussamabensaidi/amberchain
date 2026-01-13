@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import { TRANSPORT_MODES } from "@/constants/CompareOptionsFields"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -11,14 +11,14 @@ import LocationSection from "./LocationSection"
 import ShipmentTypeSection from "./ShipmentTypeSection"
 import CargoTypeSection from "./CargoTypeSection"
 import BookingForm from "./bookingForm/BookingForm"
-import  transformToAPIFormat  from "../../utils/transformToAPI"
-
-import { AnimatePresence, motion as m } from "framer-motion"
+import transformToAPIFormat from "../../utils/transformToAPI"
+import submitCompareOptions from "@/services/CompareOptionsService"
 import PopUp from "./PopUp"
+import { toast } from 'sonner';
 
 export default function ShipmentForm({ onFormComplete, enableServicePopup = true }) {
 
-  const { data, setField } = useShipmentStore()
+  const { data, setField, setComparisonResults } = useShipmentStore()
   const { mode, shipmentType, cargoType } = data
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
@@ -152,14 +152,60 @@ const handleSubmit = (e) => {
   completeSubmission(payload);
 };
 
-// 1. Update completeSubmission to accept the payload
+// Complete submission and handle success/error states
 const completeSubmission = async (transformedPayload) => {
   try {
     console.log("SENDING TO API:", transformedPayload);
-    
-    // --- ADD YOUR API CALL HERE ---
-    // const response = await axios.post('/your-endpoint', transformedPayload);
-    
+    const response = await submitCompareOptions(transformedPayload);
+
+    console.log("API RESPONSE:", response);
+
+    // Store shipment query context (parameters used for the search) for reference in results
+    setField("shipmentQueryContext", {
+      mode: data.mode,
+      shipmentType: data.shipmentType,
+      pol: data.pol,
+      pod: data.pod,
+      plor: data.plor,
+      plod: data.plod,
+      cargoType: data.cargoType,
+      commodity: data.commodity,
+      grossWeight: data.grossWeight,
+      pickupLocation: data.pickupLocation,
+      returnLocation: data.returnLocation,
+      polCity: data.polCity,
+      polCountry: data.polCountry,
+      polCountryCode: data.polCountryCode,
+      podCity: data.podCity,
+      podCountry: data.podCountry,
+      podCountryCode: data.podCountryCode,
+    });
+
+    // Store schedule data if available
+    if (response.schedule) {
+      setField("scheduleResults", response.schedule);
+      console.log("Schedule data stored:", response.schedule);
+    }
+
+    // Store quote results, or create a placeholder if we have schedule data
+    if (response.quote && Array.isArray(response.quote) && response.quote.length > 0) {
+      setComparisonResults(response.quote);
+    } else if (response.schedule && Array.isArray(response.schedule) && response.schedule.length > 0) {
+      // Create placeholder results from schedule data for display purposes
+      const placeholderResults = response.schedule.map((schedule, index) => ({
+        id: `schedule-${index}`,
+        price: schedule.price || null,
+        company: schedule.company || 'N/A',
+        solutionNumber: schedule.solutionNumber || index + 1
+      }));
+      setComparisonResults(placeholderResults);
+      console.log("Placeholder comparison results created from schedule data:", placeholderResults);
+    } else if (response.quote) {
+      setComparisonResults(response.quote);
+    }
+
+    setHasSubmitted(true);
+    toast.success('QUOTE submitted successfully!');
     if (onFormComplete) onFormComplete();
 
     // Scroll to results/success
@@ -232,7 +278,7 @@ const completeSubmission = async (transformedPayload) => {
 
         <AnimatePresence>
           {showError && error && (
-            <m.div
+            <motion.div
               key="form-error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -242,7 +288,7 @@ const completeSubmission = async (transformedPayload) => {
               style={{ minHeight: 24 }}
             >
               {error}
-            </m.div>
+            </motion.div>
           )}
         </AnimatePresence>
         {(data.cargoType && mode !== "combined") && (<BookingForm />)}
@@ -256,19 +302,20 @@ const completeSubmission = async (transformedPayload) => {
 
       </form>
 
-{enableServicePopup && ["air", "ecommerce"].includes(data.mode) && (
+{enableServicePopup && ["air", "ecommerce"].includes(data.mode) && showSuccessPopup && (
   <PopUp 
     showSuccessPopup={showSuccessPopup} 
     setShowSuccessPopup={(val) => {
       setShowSuccessPopup(val);
       if (!val) {
         // Popup closed — continue submission
-        completeSubmission();
+        const payload = transformToAPIFormat(data);
+        completeSubmission(payload);
       }
     }} 
   />
 )}
 
-    </div>
+  </div>
   )
 }
