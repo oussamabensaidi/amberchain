@@ -1,32 +1,16 @@
-import React, { useState, useCallback, useMemo } from "react"
+// Updated CompareResultsHeader.jsx
+import React, { useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import {
-  MapPin,
-  Weight,
-  Plane,
-  Truck,
-  Ship,
-  Package,
-  CalendarClock,
-  AlertCircle,
-  Clock,
-  Package2,
-  Container,
-  Building2,
-  Timer,
-  ShoppingCart,
-  ChevronDown,
-  Train,
-  AlertTriangle,
-  Snowflake,
-  Maximize,
-  Droplets,
-  Calendar,
-  ArrowRight
+  MapPin, Weight, Plane, Truck, Ship, Package, AlertCircle,
+  Clock, Package2, Container, Building2, Timer, ShoppingCart,
+  ChevronDown, Train, AlertTriangle, Snowflake, Maximize,
+  Droplets, Calendar, ArrowRight
 } from "lucide-react"
 import { useShipmentStore } from "@/store/shipmentStore"
 import { BookingConfirmationPopup } from "@/components/ui/booking-confirmation-popup"
 import TransportationIcon from "@/components/icons/TransportationIcon"
+import { formatScheduleDate, formatTransitTime, calculateDaysUntilDeparture } from "../utils/scheduleUtils"
 
 export default function CompareResultsHeader({ 
   data = {}, 
@@ -38,17 +22,15 @@ export default function CompareResultsHeader({
   onCtaClick, 
   toggle_button = true, 
   popupVariant = "booking",
-  scheduleData = {}, // NEW PROP
-  resultMeta = {} // NEW PROP - contains per-result data
+  scheduleData = null,
+  resultMeta = {}
 }) {
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false)
   const shipmentData = useShipmentStore((s) => s.data)
-  const setField = useShipmentStore((s) => s.setField)
 
   const handleBookNow = useCallback(
     (e) => {
       e.stopPropagation()
-      console.log("Booking data:", shipmentData)
       if (onCtaClick) {
         onCtaClick()
         return
@@ -57,34 +39,8 @@ export default function CompareResultsHeader({
         setShowConfirmationPopup(true)
       }
     },
-    [shipmentData, onCtaClick, enableBookingPopup]
+    [onCtaClick, enableBookingPopup]
   )
-
-  // Helper functions for schedule data
-  const formatDate = (dateString) => {
-    if (!dateString) return null
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
-
-  const formatTransitTime = (hours) => {
-    if (!hours) return null
-    const days = Math.ceil(hours / 24)
-    return `${days} ${days === 1 ? 'day' : 'days'}`
-  }
-
-  const calculateDaysUntilDeparture = (departureDate) => {
-    if (!departureDate) return null
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const departure = new Date(departureDate)
-    departure.setHours(0, 0, 0, 0)
-    const diffTime = departure - today
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    if (diffDays < 0) return `Departed`
-    if (diffDays === 0) return `Today`
-    return `${diffDays} ${diffDays === 1 ? 'day' : 'days'}`
-  }
 
   const mode = (data?.mode || "").toLowerCase()
   const shipmentType = (data?.shipmentType || "").toUpperCase()
@@ -120,22 +76,48 @@ export default function CompareResultsHeader({
   const cargoType = data?.cargoType || data?.commodity || "General Cargo"
   const selectedCargoIcon = cargoIcon[cargoType] || <Package className="w-5 h-5 text-secondary" />
 
+  // Extract schedule data
+  const schedule = scheduleData || resultMeta?._raw || {}
+  
+  
+  // Get dates from placeOfReceipt and placeOfDelivery
+  const departureDate = schedule?.placeOfReceipt?.dateTime || schedule?.departureDate
+  const arrivalDate = schedule?.placeOfDelivery?.dateTime || schedule?.arrivalDate
+  
+  
+  // Convert transit time from hours to days (rounding up)
+  const transitTime = schedule?.transitTime
+  const transitTimeDays = transitTime ? Math.ceil(Number(transitTime) / 24) : null
+  
+
+  const cutOffTime = schedule?.cutOffTimes?.find(c => c.cutOffDateTimeCode === 'FCO')?.cutOffDateTime
+
+  // Get vessel and service info from the first leg
+  const firstLeg = schedule?.legs?.[0]?.transport
+  const vesselName = firstLeg?.vessel?.name
+  const voyageNumber = firstLeg?.servicePartners?.[0]?.carrierExportVoyageNumber
+  const serviceName = firstLeg?.servicePartners?.[0]?.carrierServiceName
+
   return (
     <>
       <div className="w-full flex flex-wrap items-center gap-4 md:gap-6">
         {/* Left section: summary info */}
         <div className="flex-1 min-w-0 flex flex-wrap items-center gap-4 md:gap-6">
-          {/* Company Info - Replace with schedule carrier if available */}
+          {/* Company Info */}
           <div className="flex items-center gap-3 shrink md:shrink-0">
             <div className="rounded-lg bg-primary/10 p-2 ring-1 ring-primary/20">
               <Building2 className="w-6 h-6 text-primary" />
             </div>
             <div className="flex flex-col gap-0.2">
               <span className="font-bold text-lg leading-tight whitespace-nowrap capitalize">
-                {resultMeta?.company || scheduleData?.company || "Amber Chains Logistics"}
+                {scheduleData?.company || resultMeta?.company || "Amber Chains Logistics"}
               </span>
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {resultMeta?.solutionNumber ? `Solution #${resultMeta.solutionNumber}` : "ID: F122228"}
+                {scheduleData?.solutionNumber 
+                  ? `Solution #${scheduleData.solutionNumber}` 
+                  : resultMeta?.solutionNumber 
+                    ? `Solution #${resultMeta.solutionNumber}` 
+                    : "ID: F122228"}
               </span>
             </div>
           </div>
@@ -166,52 +148,78 @@ export default function CompareResultsHeader({
               </span>
             </div>
             <div className="w-px h-4 bg-border" />
-            {scheduleData?.transitTime ? (
-              <div className="flex items-center gap-1.5 whitespace-nowrap">
-                <Clock className={`w-4 h-4 ${modeIconColor}`} />
-                <span className="text-sm font-medium">{formatTransitTime(scheduleData.transitTime)}</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 whitespace-nowrap">
-                <Timer className={`w-4 h-4 ${modeIconColor}`} />
-                <span className="text-sm font-medium">
-                  {calculateDaysUntilDeparture(scheduleData?.departureDate) || "—"}
+            {transitTimeDays ? (
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  <Clock className={`w-4 h-4 ${modeIconColor}`} />
+                  <span className="text-sm font-medium">{transitTimeDays} days</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  <Timer className={`w-4 h-4 ${modeIconColor}`} />
+                  <span className="text-sm font-medium">
+                    {calculateDaysUntilDeparture(scheduleData?.departureDate) || "—"}
+                  </span>
+                </div>
+              )}
+
+          </div>
+
+          {/* Departure & Arrival Dates */}
+          <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted border border-border/50 shrink-0">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <Calendar className={`w-4 h-4 ${modeIconColor}`} />
+              <span className="text-sm font-medium">
+                {departureDate ? new Date(departureDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+              </span>
+              <ArrowRight className="w-3 h-3 text-muted-foreground" />
+              <span className="text-sm font-medium">
+                {arrivalDate ? new Date(arrivalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+              </span>
+            </div>
+            {cutOffTime && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <span>Cut-off:</span>
+                <span className="font-medium">
+                  {new Date(cutOffTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Departure & Arrival Dates - Replace Route if schedule data exists */}
-          {scheduleData?.departureDate && scheduleData?.arrivalDate ? (
-            <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted border border-border/50 shrink md:shrink-0">
-              <div className="flex items-center gap-1.5 whitespace-nowrap">
-                <Calendar className={`w-4 h-4 ${modeIconColor}`} />
-                <span className="text-sm font-medium">{formatDate(scheduleData.departureDate)}</span>
-              </div>
-              <ArrowRight className="w-3 h-3 text-muted-foreground" />
-              <div className="flex items-center gap-1.5 whitespace-nowrap">
-                <Calendar className={`w-4 h-4 ${modeIconColor}`} />
-                <span className="text-sm font-medium">{formatDate(scheduleData.arrivalDate)}</span>
-              </div>
-            </div>
-          ) : (
-            /* Route - Original */
-            <div className="flex items-center gap-2.5 min-w-0 shrink md:shrink-0">
-              <div className="rounded-md bg-muted p-1.5">
-                <MapPin className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <span className="font-semibold text-base whitespace-nowrap max-w-[160px] truncate">
-                {data?.pol ? data.pol.split(',')[0].trim() : "—"}
-              </span>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <div className="h-px w-6 bg-border" />
-                <div className="w-2 h-2 rotate-45 border-r-2 border-t-2 border-muted-foreground" />
-              </div>
-              <span className="font-semibold text-base whitespace-nowrap max-w-[160px] truncate">
-                {data?.pod ? data.pod.split(',')[0].trim() : "—"}
-              </span>
+          {/* Vessel & Voyage Info */}
+          {(vesselName || voyageNumber || serviceName) && (
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted border border-border/50 shrink-0">
+              {vesselName && (
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  <Ship className={`w-4 h-4 ${modeIconColor}`} />
+                  <span className="text-sm font-medium">{vesselName}</span>
+                  {voyageNumber && <span className="text-sm text-muted-foreground">/ {voyageNumber}</span>}
+                </div>
+              )}
+              {serviceName && (
+                <div className="text-xs bg-secondary/30 px-2 py-0.5 rounded-full text-muted-foreground">
+                  {serviceName}
+                </div>
+              )}
             </div>
           )}
+
+          {/* Route */}
+          <div className="flex items-center gap-2.5 min-w-0 shrink-0">
+            <div className="rounded-md bg-muted p-1.5">
+              <MapPin className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <span className="font-semibold text-base whitespace-nowrap max-w-[160px] truncate">
+              {data?.pol ? data.pol.split(',')[0].trim() : "—"}
+            </span>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="h-px w-6 bg-border" />
+              <div className="w-2 h-2 rotate-45 border-r-2 border-t-2 border-muted-foreground" />
+            </div>
+            <span className="font-semibold text-base whitespace-nowrap max-w-[160px] truncate">
+              {data?.pod ? data.pod.split(',')[0].trim() : "—"}
+            </span>
+          </div>
 
           <div className="hidden md:block flex-grow" />
         </div>
@@ -221,7 +229,7 @@ export default function CompareResultsHeader({
           {/* Price */}
           <div className="px-4 py-2 rounded-lg bg-muted/50 dark:bg-muted/30 border">
             <div className="text-3xl font-bold text-foreground leading-none whitespace-nowrap">
-              {price ? `$${price}` : '—'}
+              {price ? `${price}` : '—'}
             </div>
           </div>
 

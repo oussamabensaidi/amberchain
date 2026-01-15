@@ -41,9 +41,7 @@ const submitCompareOptions = async (formData) => {
         }
       }
     );
-
-    console.log("Quote created successfully:", quoteResponse.data);
-
+    
     // Step 2: Extract location codes from formData - DYNAMIC from user input
     // Use getLocationCodes to convert city/country to proper port codes
     const locationCodes = getLocationCodes(

@@ -62,18 +62,15 @@ export default function CompareOptions({
           </div>
           {Array.isArray(comparisonResults) && comparisonResults.length > 0 ? (
             comparisonResults.map((opt, index) => {
-              console.log(`📊 Result #${index + 1}:`, { id: opt.id, company: opt.company, solutionNumber: opt.solutionNumber, price: opt.price })
-              return (
-              <CompareResults
-                key={opt.id || index}
-                ctaLabel={resultsCtaLabel}
-                enableBookingPopup={enableBookingPopup}
-                onCtaClick={onResultsCtaClick}
-                priceOverride={opt.price}
-                resultMeta={opt}
-              />
-              )
-            })
+  console.log(`Option ${index}`, opt);
+  return (
+    <CompareResults
+      key={opt.routingReference || index}
+      resultMeta={opt}
+    />
+  )
+})
+
           ) : (
             <div className="text-center text-muted-foreground py-8">
               No comparison results available. Please submit a new quote.

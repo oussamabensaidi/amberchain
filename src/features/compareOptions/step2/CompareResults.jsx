@@ -1,78 +1,75 @@
-import {useState ,useEffect} from "react"
+// Updated CompareResults.jsx
+import {useState, useEffect} from "react"
 import { Button } from "@/components/ui/button"
 import { useShipmentStore } from "@/store/shipmentStore"
-import {
-  Card,
-  CardHeader,
-  CardContent,
-} from "@/components/ui/card"
-import {
-  AlertCircle,
-  Clock,
-  MapPin,
-} from "lucide-react"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import { AlertCircle, Clock, MapPin } from "lucide-react"
 import CompareResultTimeline from "@/components/CompareResultTimeline"
 import ShipmentMap from "@/components/map/ShipmentMap"
 import { useGeocoding } from "@/hooks/useGeocoding"
 import CompareResultsHeader from "./CompareResultsHeader"
+import TransportationIcon from "@/components/icons/TransportationIcon"
+import CompareCostBreakdown from "./CompareCostBreakdown"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { BookingConfirmationPopup } from "@/components/ui/booking-confirmation-popup"
+import CompareConditions from "./CompareConditions"
+import BookingRoute from "@/features/bookings/components/BookingRoute"
+import { normalizeScheduleData } from "../utils/scheduleUtils"
 import "@/App.css"
-import TransportationIcon from "@/components/icons/TransportationIcon";
-import CompareCostBreakdown from "./CompareCostBreakdown";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { BookingConfirmationPopup } from "@/components/ui/booking-confirmation-popup";
-import CompareConditions from "./CompareConditions";
-import BookingRoute from "@/features/bookings/components/BookingRoute";
-
-export default function CompareResults({ onBack, ctaLabel = "Book now", enableBookingPopup = true, onCtaClick, priceOverride, resultMeta, headerOnly = false, toggle_button = true, popupVariant = "booking" }) {
+import { Ship, ArrowRight } from "lucide-react"
+export default function CompareResults({ 
+  onBack, 
+  ctaLabel = "Book now", 
+  enableBookingPopup = true, 
+  onCtaClick, 
+  priceOverride, 
+  resultMeta,
+  headerOnly = false, 
+  toggle_button = true, 
+  popupVariant = "booking" 
+}) {
   const { data } = useShipmentStore()
   const [expanded, setExpanded] = useState(false)
   const [activeTab, setActiveTab] = useState("cost")
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false)
+  
+  // Debug log the raw resultMeta
+  console.log('Raw resultMeta:', JSON.parse(JSON.stringify(resultMeta || {})));
+  
+  // Get the raw schedule data (it's already in the format we need)
+  const rawScheduleData = resultMeta?.schedule || resultMeta?._raw || resultMeta;
+  console.log('Raw schedule data:', JSON.parse(JSON.stringify(rawScheduleData || {})));
+  
+  // Normalize schedule data using util
+  const normalizedSchedule = normalizeScheduleData(rawScheduleData);
+  console.log('Normalized schedule:', JSON.parse(JSON.stringify(normalizedSchedule || {})));
+  
   const price = resultMeta?.price ?? priceOverride ?? "-"
-  const [isLoadingSchedule, setIsLoadingSchedule] = useState(false)
-  const [scheduleError, setScheduleError] = useState(null)
   
   // Determine button label based on price
   const finalCtaLabel = (price === null || price === "-") ? "Pre Book" : ctaLabel
   
-  // Debug: Log each result to verify array iteration
-  useEffect(() => {
-    console.log("🔍 CompareResults - resultMeta received:", {
-      id: resultMeta?.id,
-      company: resultMeta?.company,
-      solutionNumber: resultMeta?.solutionNumber,
-      price: resultMeta?.price,
-      scheduleExists: !!resultMeta?.schedule
-    })
-  }, [resultMeta])
-  
-  // Get schedule results from resultMeta (each result has its own schedule)
-  // Fall back to store data if resultMeta doesn't have schedule
-  const schedule = resultMeta?.schedule
-  
-  // Get shipment query context from store (parameters used for search)
+  // Get shipment query context from store
   const shipmentContext = data.shipmentQueryContext || {}
-  const shipmentData = {
-    mode: shipmentContext.mode || data.mode || "",
-    shipmentType: shipmentContext.shipmentType || data.shipmentType || "",
-    pol: shipmentContext.pol || data.pol || "",
-    pod: shipmentContext.pod || data.pod || "",
-    plor: shipmentContext.plor || data.plor || "",
-    plod: shipmentContext.plod || data.plod || "",
-    cargoType: shipmentContext.cargoType || data.cargoType || "",
-    commodity: shipmentContext.commodity || data.commodity || "",
-    grossWeight: shipmentContext.grossWeight || data.grossWeight || "",
-    pickupLocation: shipmentContext.pickupLocation || data.pickupLocation || "",
-    returnLocation: shipmentContext.returnLocation || data.returnLocation || "",
-    polCity: shipmentContext.polCity || data.polCity || "",
-    polCountry: shipmentContext.polCountry || data.polCountry || "",
-    podCity: shipmentContext.podCity || data.podCity || "",
-    podCountry: shipmentContext.podCountry || data.podCountry || "",
-  }
-
-
-
-
+// Inside CompareResults.jsx
+// Use resultMeta as primary source, fallback to store if needed
+const shipmentData = {
+  mode: resultMeta?.mode || data.mode || "",
+  shipmentType: resultMeta?.shipmentType || data.shipmentType || "",
+  pol: resultMeta?.pol || data.pol || "",
+  pod: resultMeta?.pod || data.pod || "",
+  plor: resultMeta?.plor || data.plor || "",
+  plod: resultMeta?.plod || data.plod || "",
+  cargoType: resultMeta?.cargoType || data.cargoType || "",
+  commodity: resultMeta?.commodity || data.commodity || "",
+  grossWeight: resultMeta?.grossWeight || data.grossWeight || "",
+  pickupLocation: resultMeta?.pickupLocation || data.pickupLocation || "",
+  returnLocation: resultMeta?.returnLocation || data.returnLocation || "",
+  polCity: resultMeta?.polCity || data.polCity || "",
+  polCountry: resultMeta?.polCountry || data.polCountry || "",
+  podCity: resultMeta?.podCity || data.podCity || "",
+  podCountry: resultMeta?.podCountry || data.podCountry || "",
+};
   const { coordinates: originCoords, isLoading: originLoading, error: originError } = useGeocoding(shipmentData.pol)
   const { coordinates: destinationCoords, isLoading: destLoading, error: destError } = useGeocoding(shipmentData.pod)
 
@@ -162,7 +159,7 @@ export default function CompareResults({ onBack, ctaLabel = "Book now", enableBo
           data={shipmentData}
           expanded={expanded}
           setExpanded={setExpanded}
-          scheduleData={schedule}
+          scheduleData={normalizedSchedule}
           price={price}
           resultMeta={resultMeta}
           ctaLabel={finalCtaLabel}
@@ -222,7 +219,51 @@ export default function CompareResults({ onBack, ctaLabel = "Book now", enableBo
                 </div>
               </div>
             </div>
+{/* Add this inside the {expanded && (...)} block in CompareResults.jsx */}
+<div className="bg-muted/30 rounded-xl border p-6 shadow-sm">
+  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+    <Ship className="w-6 h-6 text-primary" />
+    Vessel & Voyage Details
+  </h3>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {normalizedSchedule?.legs?.map((leg, idx) => (
+      <div key={idx} className="bg-background p-4 rounded-lg border border-border">
+        <div className="text-xs font-bold text-primary uppercase mb-2">
+          Leg {leg.sequenceNumber}: {leg.transport?.modeOfTransport}
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Vessel:</span>
+            <span className="text-sm font-semibold">{leg.transport?.vessel?.name || "N/A"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Voyage:</span>
+            <span className="text-sm font-semibold">{leg.transport?.servicePartners?.[0]?.carrierExportVoyageNumber || "N/A"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Service:</span>
+            <span className="text-sm font-semibold">{leg.transport?.servicePartners?.[0]?.carrierServiceName || "N/A"}</span>
+          </div>
+          <div className="mt-2 pt-2 border-t flex justify-between text-xs">
+ <span>
+    {leg.departure?.dateTime
+      ? new Date(leg.departure.dateTime).toLocaleDateString()
+      : "—"}
+  </span>
 
+  <ArrowRight className="w-3 h-3" />
+
+  <span>
+    {leg.arrival?.dateTime
+      ? new Date(leg.arrival.dateTime).toLocaleDateString()
+      : "—"}
+  </span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
             <div className="group w-full bg-card hover:bg-accent border rounded-xl shadow-sm p-4">
               <div className="flex items-center justify-between gap-3">
                 <ToggleGroup
@@ -250,7 +291,8 @@ export default function CompareResults({ onBack, ctaLabel = "Book now", enableBo
                 ) : (
                   <CompareConditions
                     conditions={resultMeta?.conditions}
-                    fallbackTransitDays={resultMeta?.transitDays}
+                    fallbackTransitDays={normalizedSchedule?.transitTimeDays || resultMeta?.transitDays}
+                    scheduleData={normalizedSchedule}
                   />
                 )}
               </div>
