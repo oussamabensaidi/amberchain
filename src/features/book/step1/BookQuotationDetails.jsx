@@ -1,8 +1,8 @@
   import React, { useState, useMemo, useCallback, memo } from "react";
 import { useShipmentStore } from "@/store/shipmentStore";
-    import CargoDetailsSection from "@/features/compareOptions/component/step1/bookingForm/CargoDetailsSection";
-    import TemperatureControlSection from "@/features/compareOptions/component/step1/bookingForm/TemperatureControlSection";
-    import DeliveryRequirementsSection from "@/features/compareOptions/component/step1/bookingForm/DeliveryRequirementsSection";
+    import CargoDetailsSection from "@/features/compareOptions/step1/bookingForm/CargoDetailsSection";
+    import TemperatureControlSection from "@/features/compareOptions/step1/bookingForm/TemperatureControlSection";
+    import DeliveryRequirementsSection from "@/features/compareOptions/step1/bookingForm/DeliveryRequirementsSection";
     // import ServiceAddonsSection from "./ServiceAddonsSection";
     // import LeftColumnBanner from "./LeftColumnBanner";
 

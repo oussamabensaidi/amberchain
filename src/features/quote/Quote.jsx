@@ -1,8 +1,8 @@
 import React, { useState } from "react"
 import { useTranslation } from "react-i18next"
 import DashNav from "@/components/dashboard/DashNav"
-import ShipmentForm from "../compareOptions/component/step1/ShipmentForm"
-import CompareResults from "../compareOptions/component/step2/CompareResults"
+import ShipmentForm from "../compareOptions/step1/ShipmentForm"
+import CompareResults from "../compareOptions/step2/CompareResults"
 
 export default function CompareOptions() {
   const { t } = useTranslation()

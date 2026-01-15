@@ -4,11 +4,11 @@ import { CheckCircle, ArrowRight, ArrowLeft, Package, MapPin, Truck, Settings } 
 import { Button } from "@/components/ui/button"
 import { useShipmentStore } from "@/store/shipmentStore"
 import { locationLabels } from "@/features/compareOptions/utils/modeLabels"
-import LocationSection from "@/features/compareOptions/component/step1/LocationSection"
+import LocationSection from "@/features/compareOptions/step1/LocationSection"
 import BookModeCargoShipmentForm from "@/features/book/bookComponent/BookModeCargoShipmentForm"
 import QuoteHelperCard from "@/features/book/step1/QuoteHelperCard"
-import ServiceAddonsSection from "@/features/compareOptions/component/step1/bookingForm/ServiceAddonsSection"
-import PopUp from "../../compareOptions/component/step1/PopUp"
+import ServiceAddonsSection from "@/features/compareOptions/step1/bookingForm/ServiceAddonsSection"
+import PopUp from "../../compareOptions/step1/PopUp"
 
 
 import BookQuotationDetails from "@/features/book/step1/BookQuotationDetails"

@@ -5,8 +5,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import LocationInput from "./LocationInput"
-import ContainerTypeSearchSelect from "@/features/compareOptions/component/step1/ContainerTypeSearchSelect"
-import TruckTypeSearchSelect from "@/features/compareOptions/component/step1/TruckTypeSearchSelect"
+import ContainerTypeSearchSelect from "@/features/compareOptions/step1/ContainerTypeSearchSelect"
+import TruckTypeSearchSelect from "@/features/compareOptions/step1/TruckTypeSearchSelect"
 import CommoditySearchSelect from "./CommoditySearchSelect"
 
 
