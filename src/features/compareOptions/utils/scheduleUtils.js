@@ -12,7 +12,7 @@ export function normalizeScheduleData(scheduleData) {
     company: scheduleData.company,
     solutionNumber: scheduleData.solutionNumber,
     price: scheduleData.price,
-    
+
     // Transit time in hours and days
     transitTimeHours: scheduleData.transitTime,
     transitTimeDays: scheduleData.transitTime ? Math.ceil(scheduleData.transitTime / 24) : null,
@@ -36,7 +36,7 @@ export function normalizeScheduleData(scheduleData) {
     cutOffTimes: scheduleData.cutOffTimes || [],
     
     // Legs/Route information
-legs: extractVesselInfo(scheduleData.legs),
+    legs: scheduleData.legs || [],
     
     // Full raw data for advanced use cases
     _raw: scheduleData
@@ -50,7 +50,8 @@ legs: extractVesselInfo(scheduleData.legs),
  * @returns {string}
  */
 export function formatScheduleDate(dateString, options = { month: 'short', day: 'numeric' }) {
-  if (!dateString) return null;
+  if (!dateString) 
+    return null;
   const date = new Date(dateString);
   return date && !isNaN(date) ? date.toLocaleDateString('en-US', options) : null;
 }
@@ -138,23 +139,7 @@ export function getReceiptDeliveryType(type) {
  * @param {Array} legs 
  * @returns {Array}
  */
-export function extractVesselInfo(legs) {
-  if (!legs || !Array.isArray(legs)) return [];
-  
-  return legs.map(leg => ({
-    sequenceNumber: leg.sequenceNumber,
-    vesselName: leg.transport?.vessel?.name,
-    vesselIMO: leg.transport?.vessel?.vesselIMONumber,
-    vesselFlag: leg.transport?.vessel?.flag,
-    serviceName: leg.transport?.servicePartners?.[0]?.carrierServiceName,
-    serviceCode: leg.transport?.servicePartners?.[0]?.carrierServiceCode,
-    voyageNumber: leg.transport?.servicePartners?.[0]?.carrierImportVoyageNumber,
-    departureLocation: leg.departure?.location?.locationName,
-    departureDateTime: leg.departure?.dateTime,
-    arrivalLocation: leg.arrival?.location?.locationName,
-    arrivalDateTime: leg.arrival?.dateTime
-  }));
-}
+
 
 /**
  * Check if schedule data is valid and complete
