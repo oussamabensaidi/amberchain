@@ -308,7 +308,7 @@ function ServiceAddonsSection({ data, setField }) {
                               const destination = Boolean(checked);
                               const origin = Boolean(data.addons?.customsBrokerage?.origin);
                               const enabled = origin || destination;
-                              const location = origin && destination ? "both" : origin ? "origin" : destination ? "destination" : undefined;
+                              const location = origin && destination ? "BOTH" : origin ? "ORIGIN" : destination ? "DESTINATION" : undefined;
                               setField("addons", {
                                 ...data.addons,
                                 customsBrokerage: {
@@ -374,10 +374,10 @@ function ServiceAddonsSection({ data, setField }) {
                           <SelectValue placeholder="Type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="quality">Quality</SelectItem>
-                          <SelectItem value="quantity">Quantity</SelectItem>
-                          <SelectItem value="customs">Customs</SelectItem>
-                          <SelectItem value="phytosanitary">Phytosanitary</SelectItem>
+                          <SelectItem value="QUALITY">Quality</SelectItem>
+                          <SelectItem value="QUANTITY">Quantity</SelectItem>
+                          <SelectItem value="CUSTOMS">Customs</SelectItem>
+                          <SelectItem value="PHYTOSANITARY">Phytosanitary</SelectItem>
                         </SelectContent>
                       </Select>
                     </motion.div>
@@ -441,7 +441,7 @@ function ServiceAddonsSection({ data, setField }) {
                         placeholder="Value"
                       />
                       <Select
-                        value={data.addons?.insurance?.currency || "USD"}
+                        value={data.addons?.insurance?.currency || "EURO"}
                         className=""
                         onValueChange={(val) =>
                           setField("addons", {
