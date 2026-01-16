@@ -11,7 +11,8 @@ import LocationSection from "./LocationSection"
 import ShipmentTypeSection from "./ShipmentTypeSection"
 import CargoTypeSection from "./CargoTypeSection"
 import BookingForm from "./bookingForm/BookingForm"
-import transformToAPIFormat from "../utils/transformToAPI"
+// import transformToAPIFormat from "../utils/transformToAPI"
+import {toApiShipment} from "@/mappers/shipmentMapper"
 // import normalizeScheduleData from "../utils/scheduleUtils"
 import submitCompareOptions from "@/services/CompareOptionsService"
 import PopUp from "./PopUp"
@@ -108,33 +109,31 @@ export default function ShipmentForm({ onFormComplete, enableServicePopup = true
   }
 
 
-const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  const validationErrors = validateForm();
-  
-  if (Object.keys(validationErrors).length > 0) {
-    setFieldErrors(validationErrors);
-    setError("Please fix the errors above and try again.");
-    setShowError(true);
+    const validationErrors = validateForm();
+    
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      setError("Please fix the errors above and try again.");
+      setShowError(true);
 
-    // Scroll to the first error
-    setTimeout(() => {
-      const firstError = Object.keys(validationErrors)[0];
-      const errorToRef = {
-        mode: modeRef, shipmentType: shipmentTypeRef,
-        pol: locationsRef, pod: locationsRef,
-        cargoType: cargoTypeRef, commodity: cargoTypeRef,
-        grossWeight: cargoTypeRef
-      };
-      errorToRef[firstError]?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
-    return; // Stop here if invalid
+      // Scroll to the first error
+      setTimeout(() => {
+        const firstError = Object.keys(validationErrors)[0];
+        const errorToRef = {
+          mode: modeRef, shipmentType: shipmentTypeRef,
+          pol: locationsRef, pod: locationsRef,
+          cargoType: cargoTypeRef, commodity: cargoTypeRef,
+          grossWeight: cargoTypeRef
+        };
+        errorToRef[firstError]?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+      return; // Stop here if invalid
   }
-
   // VALIDATION PASSED: Now transform
-  const payload = transformToAPIFormat(data);
-
+  const payload = toApiShipment(data);
   // Clear previous errors
   setError("");
   setShowError(false);
@@ -299,7 +298,7 @@ const completeSubmission = async (transformedPayload) => {
       setShowSuccessPopup(val);
       if (!val) {
         // Popup closed — continue submission
-        const payload = transformToAPIFormat(data);
+        const payload = toApiShipment(data);
         completeSubmission(payload);
       }
     }} 
