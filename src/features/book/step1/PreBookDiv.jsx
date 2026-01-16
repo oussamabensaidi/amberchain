@@ -1,8 +1,12 @@
 import React from 'react';
 import QuoteHelperCard from './QuoteHelperCard';
 import { ArrowRight, Zap, Shield, CheckCircle } from 'lucide-react';
+import useAuthStore from '@/store/authStore';
+
 
 export default function PreBookDiv({ onSelectQuote, onCreateNew }) {
+  const { user } = useAuthStore();
+  const userId = user?.id;
   return (
     <section className="py-16 lg:py-24">
       <div className="container mx-auto px-6">
@@ -74,6 +78,7 @@ export default function PreBookDiv({ onSelectQuote, onCreateNew }) {
                 showCreateNew
                 onCreateNew={onCreateNew}
                 onSelectQuote={onSelectQuote}
+                userId={userId}
               />
         
         

@@ -1,14 +1,17 @@
 import React, { useState } from "react"
 import { useShipmentStore } from "@/store/shipmentStore"
-import { dummyQuotes } from "../utils/quotesDummyData"
+import { useUserQuotes } from "@/queries/useUserQuotes"
 
-export default function QuoteHelperCard({ onSelectQuote, showCreateNew = false, onCreateNew }) {
+export default function QuoteHelperCard({ onSelectQuote, showCreateNew = false, onCreateNew, userId }) {
   const { setField } = useShipmentStore()
   const [searchTerm, setSearchTerm] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [showAllLatest, setShowAllLatest] = useState(false)
 
-  const filteredQuotes = dummyQuotes.filter((q) => {
+  // Fetch quotes using the custom hook
+  const { data: quotes = [], isLoading, isError } = useUserQuotes(userId)
+console.log("Rendering QuoteHelperCard with quotes:", quotes)
+  const filteredQuotes = quotes.filter((q) => {
     if (!searchTerm) return true
     const term = searchTerm.toLowerCase()
     return (
@@ -18,8 +21,11 @@ export default function QuoteHelperCard({ onSelectQuote, showCreateNew = false, 
       q.customer.toLowerCase().includes(term)
     )
   })
-
-  const latestQuotes = [...dummyQuotes].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+  const latestQuotes = [...quotes].sort((a, b) => {
+    // Sort by creation date descending (newest first)
+    return new Date(b.createdAt) - new Date(a.createdAt)
+  })
+  
   const visibleLatestQuotes = showAllLatest ? latestQuotes : latestQuotes.slice(0, 4)
   const hasMoreLatest = latestQuotes.length > 4
 
@@ -81,91 +87,116 @@ export default function QuoteHelperCard({ onSelectQuote, showCreateNew = false, 
         )}
       </div>
 
-      {/* SEARCH BOX */}
-      <div className="space-y-1 relative">
-        <label className="text-xs font-medium">Search by reference, route or customer</label>
-
-        <input
-          id="quote-search"
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onFocus={() => setShowSuggestions(true)}
-          onBlur={() => setShowSuggestions(false)}
-          placeholder="e.g. Q-2025-001, Rotterdam, Fresh Fruits BV"
-          className="w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary/40"
-        />
-
-        {/* Suggestions Dropdown */}
-        {showSuggestions && filteredQuotes.length > 0 && (
-          <div className="absolute z-20 mt-1 w-full rounded-lg border bg-popover shadow-xl overflow-hidden max-h-64 overflow-y-auto">
-            {filteredQuotes.map((quote) => (
-              <button
-                key={quote.id}
-                type="button"
-                onMouseDown={() => {
-                  handleUseQuote(quote)
-                  setShowSuggestions(false)
-                  setSearchTerm(`${quote.id} · ${quote.pol} → ${quote.pod}`)
-                }}
-                className="w-full text-left px-4 py-2.5 text-sm hover:bg-accent/40 flex flex-col border-b last:border-none"
-              >
-                <span className="font-medium">
-                  {quote.id} — {quote.pol} → {quote.pod}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {quote.customer}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* LATEST QUOTES */}
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-          Latest quotes
-        </p>
-
-        <div className="space-y-2">
-          {visibleLatestQuotes.map((quote) => (
-            <button
-              key={quote.id}
-              type="button"
-              onClick={() => {
-                handleUseQuote(quote)
-                setSearchTerm(`${quote.id} · ${quote.pol} → ${quote.pod}`)
-              }}
-              className="w-full rounded-lg border bg-background px-4 py-3 text-sm shadow-sm hover:bg-accent/40 transition flex justify-between items-center"
-            >
-              <div className="space-y-0.5 text-left">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">
-                    {quote.id} — {quote.pol} → {quote.pod}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">{quote.createdAt}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">{quote.customer}</p>
-              </div>
-
-              <span className="text-[11px] uppercase font-medium text-muted-foreground">
-                {quote.mode}
-              </span>
-            </button>
-          ))}
-          {hasMoreLatest && !showAllLatest && (
-            <button
-              type="button"
-              onClick={() => setShowAllLatest(true)}
-              className="mx-auto flex h-7 w-10 items-center justify-center rounded-full border bg-background text-lg leading-none text-muted-foreground hover:bg-accent/60"
-              aria-label="Load more latest quotes"
-            >
-              …
-            </button>
-          )}
+      {/* LOADING STATE */}
+      {isLoading && (
+        <div className="text-center py-8 text-sm text-muted-foreground">
+          Loading quotes...
         </div>
-      </div>
+      )}
+
+      {/* ERROR STATE */}
+      {isError && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          Failed to load quotes. Please try again.
+        </div>
+      )}
+
+      {/* MAIN CONTENT */}
+      {!isLoading && !isError && (
+        <>
+          {/* SEARCH BOX */}
+          <div className="space-y-1 relative">
+            <label className="text-xs font-medium">Search by reference, route or customer</label>
+
+            <input
+              id="quote-search"
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setShowSuggestions(false)}
+              placeholder="e.g. Q-2025-001, Rotterdam, Fresh Fruits BV"
+              className="w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary/40"
+            />
+
+            {/* Suggestions Dropdown */}
+            {showSuggestions && filteredQuotes.length > 0 && (
+              <div className="absolute z-20 mt-1 w-full rounded-lg border bg-popover shadow-xl overflow-hidden max-h-64 overflow-y-auto">
+                {filteredQuotes.map((quote) => (
+                  <button
+                    key={quote.id}
+                    type="button"
+                    onMouseDown={() => {
+                      handleUseQuote(quote)
+                      setShowSuggestions(false)
+                      setSearchTerm(`${quote.id} · ${quote.pol} → ${quote.pod}`)
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-accent/40 flex flex-col border-b last:border-none"
+                  >
+                    <span className="font-medium">
+                      {quote.id} — {quote.pol} → {quote.pod}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {quote.customer || 'No customer info'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* LATEST QUOTES */}
+          {quotes.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                Latest quotes
+              </p>
+
+              <div className="space-y-2">
+                {visibleLatestQuotes.map((quote) => (
+                  <button
+                    key={quote.id}
+                    type="button"
+                    onClick={() => {
+                      handleUseQuote(quote)
+                      setSearchTerm(`${quote.id} · ${quote.pol} → ${quote.pod}`)
+                    }}
+                    className="w-full rounded-lg border bg-background px-4 py-3 text-sm shadow-sm hover:bg-accent/40 transition flex justify-between items-center"
+                  >
+                    <div className="space-y-0.5 text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {quote.id} — {quote.pol} → {quote.pod}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">{quote.createdAt}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{quote.customer || 'No customer'}</p>
+                    </div>
+
+                    <span className="text-[11px] uppercase font-medium text-muted-foreground">
+                      {quote.mode}
+                    </span>
+                  </button>
+                ))}
+                {hasMoreLatest && !showAllLatest && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllLatest(true)}
+                    className="mx-auto flex h-7 w-10 items-center justify-center rounded-full border bg-background text-lg leading-none text-muted-foreground hover:bg-accent/60"
+                    aria-label="Load more latest quotes"
+                  >
+                    …
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-sm text-muted-foreground">
+              No quotes found. Create your first quote to get started.
+            </div>
+          )}
+        </>
+      )}
 
       {/* FOOTER INFO BOX */}
       <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs text-muted-foreground space-y-1">
