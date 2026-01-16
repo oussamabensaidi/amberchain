@@ -117,6 +117,43 @@ export const useShipmentStore = create((set) => ({
     returnCountryCode: "",
     returnLat: "",
     returnLon: "",
+    addons: {
+      stuffing: {
+        enabled: false,
+        equipment: "", // 'forklift' | 'manually'
+        resources: "", // Number of workers
+      },
+      unstuffing: {
+        enabled: false,
+        equipment: "",
+        resources: "",
+      },
+      customsBrokerage: {
+        enabled: false,
+        origin: false,
+        destination: false,
+        location: "", // 'origin' | 'destination' | 'both'
+      },
+      inspection: {
+        enabled: false,
+        type: "", // 'quality' | 'quantity' | 'customs' | 'phytosanitary'
+      },
+      insurance: {
+        enabled: false,
+        cargoValue: "",
+        currency: "USD",
+      },
+      // Simple Boolean Addons
+      portAgent: false,
+      reposition: false,
+      trackLive: false,
+      trokeTrace: false,
+      socForAll: false,
+      readyToLoad: false,
+      changeDestination: false,
+      extraFreeTime: false,
+      reduceEmission: false,
+    },
   },
 
   setField: (key, value) =>
@@ -256,6 +293,43 @@ export const useShipmentStore = create((set) => ({
         returnCountryCode: "",
         returnLat: "",
         returnLon: "",
+        addons: {
+        stuffing: {
+          enabled: false,
+          equipment: "", // 'forklift' | 'manually'
+          resources: "", // Number of workers
+        },
+        unstuffing: {
+          enabled: false,
+          equipment: "",
+          resources: "",
+        },
+        customsBrokerage: {
+          enabled: false,
+          origin: false,
+          destination: false,
+          location: "", // 'origin' | 'destination' | 'both'
+        },
+        inspection: {
+          enabled: false,
+          type: "", // 'quality' | 'quantity' | 'customs' | 'phytosanitary'
+        },
+        insurance: {
+          enabled: false,
+          cargoValue: "",
+          currency: "USD",
+        },
+        // Simple Boolean Addons
+        portAgent: false,
+        reposition: false,
+        trackLive: false,
+        trokeTrace: false,
+        socForAll: false,
+        readyToLoad: false,
+        changeDestination: false,
+        extraFreeTime: false,
+        reduceEmission: false,
+    },
       },
     })
 }))
