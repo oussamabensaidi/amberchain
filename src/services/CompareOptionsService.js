@@ -66,10 +66,6 @@ const submitCompareOptions = async (formData) => {
       stuffingWeight: weight
     };
 
-    console.log("Calling schedule endpoint with payload:", schedulePayload);
-    console.log("Token:", token);
-    console.log("Full URL:", `${import.meta.env.VITE_APP_DOMAIN}/schedule/points-to-points`);
-
     let scheduleData = null;
     try {
       const scheduleResponse = await axios.post(

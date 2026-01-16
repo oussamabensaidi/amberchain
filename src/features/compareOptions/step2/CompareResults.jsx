@@ -33,16 +33,12 @@ export default function CompareResults({
   const [activeTab, setActiveTab] = useState("cost")
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false)
   
-  // Debug log the raw resultMeta
-  console.log('Raw resultMeta:', JSON.parse(JSON.stringify(resultMeta || {})));
-  
+
   // Get the raw schedule data (it's already in the format we need)
   const rawScheduleData = resultMeta?.schedule || resultMeta?._raw || resultMeta;
-  console.log('Raw schedule data:', JSON.parse(JSON.stringify(rawScheduleData || {})));
   
   // Normalize schedule data using util
   const normalizedSchedule = normalizeScheduleData(rawScheduleData);
-  console.log('Normalized schedule:', JSON.parse(JSON.stringify(normalizedSchedule || {})));
   
   const price = resultMeta?.price ?? priceOverride ?? "-"
   
