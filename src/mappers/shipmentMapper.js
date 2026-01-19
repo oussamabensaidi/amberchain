@@ -5,22 +5,23 @@
 ========================= */
 
 export function toApiShipment(sourceData) {
-    const safeNumber = (v) => v === "" || v == null ? null : Number(v);
+  const safeNumber = (v) => v === "" || v == null ? null : Number(v);
 
   return {
     cargoDetail: {
-    accessConditions: mapAccessCondition(sourceData.accsesConditions),
+      accessConditions: mapAccessCondition(sourceData.accsesConditions),
       cargoProbs: sourceData.probes?.numberOfCargoProbes || 0,
       coldTraitement: sourceData.coldTreatment?.required || false,
       drainHolesOpen: sourceData.probes?.drainHoles || false,
       freshAirExchangeOpen: sourceData.probes?.freshAirExchange === "open",
       gensetDuringExport: sourceData.genset?.duringExport || false,
       gensetDuringImport: sourceData.genset?.duringImport || false,
-        height: safeNumber(sourceData.cargo?.height),
-        length: safeNumber(sourceData.cargo?.length),
-        width: safeNumber(sourceData.cargo?.width),
-        numberOfPackages: safeNumber(sourceData.cargo?.numberOfPackages),
-        numberOfPallets: safeNumber(sourceData.cargo?.numberOfPallets),      humidity: sourceData.humidity?.percentage || "",
+      height: safeNumber(sourceData.cargo?.height),
+      length: safeNumber(sourceData.cargo?.length),
+      width: safeNumber(sourceData.cargo?.width),
+      numberOfPackages: safeNumber(sourceData.cargo?.numberOfPackages),
+      numberOfPallets: safeNumber(sourceData.cargo?.numberOfPallets),
+      humidity: sourceData.humidity?.percentage || "",
       humidityControl: sourceData.humidity?.required || false,
       id: 0,
       imoClass: sourceData.cargo?.class || "",
@@ -31,7 +32,6 @@ export function toApiShipment(sourceData) {
       temperatureSetPoints: {
         enabled: sourceData.coldTreatment?.multipleSetPoints || false,
         mode: "string",
-        // Ensure we map this safely even if undefined
         sets: sourceData.coldTreatment?.temperatureSetPoints || [],
       },
       truckType: sourceData.cargo?.truckType || "",
@@ -69,35 +69,35 @@ export function toApiShipment(sourceData) {
       : buildLocation("pod", sourceData),
 
     serviceAddons: {
-    changeDestination: !!sourceData.addons?.changeDestination,
-    extraFreeTime: !!sourceData.addons?.extraFreeTime,
-    portAgent: !!sourceData.addons?.portAgent,
-    readyToLoad: !!sourceData.addons?.readyToLoad,
-    reduceEmission: !!sourceData.addons?.reduceEmission,
-    repositionning: !!sourceData.addons?.reposition,
-    socForAll: !!sourceData.addons?.socForAll,
-    liveTracking: !!sourceData.addons?.trackLive,
-    customerBrokerage: sourceData.addons?.customsBrokerage?.enabled
+      changeDestination: !!sourceData.addons?.changeDestination,
+      extraFreeTime: !!sourceData.addons?.extraFreeTime,
+      portAgent: !!sourceData.addons?.portAgent,
+      readyToLoad: !!sourceData.addons?.readyToLoad,
+      reduceEmission: !!sourceData.addons?.reduceEmission,
+      repositionning: !!sourceData.addons?.reposition,
+      socForAll: !!sourceData.addons?.socForAll,
+      liveTracking: !!sourceData.addons?.trackLive,
+      customerBrokerage: sourceData.addons?.customsBrokerage?.enabled
         ? (sourceData.addons.customsBrokerage.origin && sourceData.addons.customsBrokerage.destination ? "BOTH" :
         sourceData.addons.customsBrokerage.origin ? "ORIGIN" :
         sourceData.addons.customsBrokerage.destination ? "DESTINATION" : null)
         : null,
-    inspection: sourceData.addons?.inspection?.enabled
+      inspection: sourceData.addons?.inspection?.enabled
         ? { type: sourceData.addons.inspection.type || "" }
         : null,
-    insurance: sourceData.addons?.insurance?.enabled
+      insurance: sourceData.addons?.insurance?.enabled
         ? Number(sourceData.addons.insurance.cargoValue)
         : 0,
-    insuranceCurrency: sourceData.addons?.insurance?.currency || "EURO",
-    stuffing: sourceData.addons?.stuffing?.enabled
+      insuranceCurrency: sourceData.addons?.insurance?.currency || "EURO",
+      stuffing: sourceData.addons?.stuffing?.enabled
         ? (sourceData.addons.stuffing.equipment?.toUpperCase() || "MANUALLY")
         : null,
-    stuffingNumberWorkers: parseInt(sourceData.addons?.stuffing?.resources) || 0,
-    unStuffing: sourceData.addons?.unstuffing?.enabled
+      stuffingNumberWorkers: parseInt(sourceData.addons?.stuffing?.resources) || 0,
+      unStuffing: sourceData.addons?.unstuffing?.enabled
         ? (sourceData.addons.unstuffing.equipment?.toUpperCase() || "MANUALLY")
         : null,
-    unStuffingNumberWorkers: parseInt(sourceData.addons?.unstuffing?.resources) || 0,
-    trokeTrace: !!sourceData.addons?.trokeTrace
+      unStuffingNumberWorkers: parseInt(sourceData.addons?.unstuffing?.resources) || 0,
+      trokeTrace: !!sourceData.addons?.trokeTrace
     },
 
     grossWeight: Number(sourceData.grossWeight) || 0,
@@ -116,11 +116,13 @@ export function toApiShipment(sourceData) {
 
 export function fromApiShipment(api) {
   return {
-    mode: api.shipmentMode || "",
+    // CRITICAL: Normalize mode to lowercase for UI consistency
+    mode: api.shipmentMode?.toLowerCase() || "",
     shipmentType: api.shipmentMethod || "",
-    containerType: api.containerType || "",
+    containerType: buildContainerTypeString(api.containerType, api.containerSize),
 
-    cargoType: api.cargoType || "",
+    // CRITICAL: Reverse cargo type mapping
+    cargoType: reverseMapCargoType(api.cargoType),
     commodity: api.commodity || "",
     grossWeight: String(api.grossWeight || ""),
 
@@ -167,12 +169,14 @@ export function fromApiShipment(api) {
       required: api.cargoDetail?.liftGate || false,
     },
 
-    accsesConditions: api.cargoDetail?.accessConditions || "",
+    accsesConditions: reverseMapAccessCondition(api.cargoDetail?.accessConditions),
+
+    // CRITICAL: Map service addons from API
+    addons: mapServiceAddonsFromApi(api.serviceAddons),
 
     // RESTORE BOOLEAN FLAGS (Critical for UI visibility)
     pickupChecked: !!api.containerPickUpLocation,
     returnChecked: !!api.containerDeliveryLocation,
-    // Compare PLOR vs POL to determine if checked
     plorChecked: !!(api.positionA?.city && api.positionA.city !== api.pickUpPosition?.city),
     plodChecked: !!(api.positionB?.city && api.positionB.city !== api.deliveryPosition?.city),
 
@@ -202,7 +206,6 @@ function buildLocation(prefix, src) {
   };
 }
 
-
 function flattenLocation(prefix, loc) {
   if (!loc) return {};
   return {
@@ -211,8 +214,7 @@ function flattenLocation(prefix, loc) {
     [`${prefix}CountryCode`]: loc.countryCode || "",
     [`${prefix}Lat`]: loc.lat || "",
     [`${prefix}Lon`]: loc.lon || "",
-    // Also map the full string if the store uses it for display
-    [`${prefix}`]: loc.city ? `${loc.city}, ${loc.countryCode}` : "", 
+    [`${prefix}`]: loc.city ? `${loc.city}, ${loc.countryCode}` : "",
   };
 }
 
@@ -220,9 +222,23 @@ function mapCargoType(type) {
   if (!type) return "GENERAL";
   const t = type.toLowerCase();
   if (t === "hazardous") return "IMO";
-  if (t === "reefer" || t === "perishable") return "REEFER";
-  if (t === "oog" || t === "oversized") return "OOG";
+  if (t === "perishable") return "REEFER";  // Changed from "reefer"
+  if (t === "oversized") return "OOG";      // Changed from "oog"
+  if (t === "liquid") return "LQUID";       // Added
+  if (t === "general") return "GENERAL";    // Added explicitly
   return "GENERAL";
+}
+
+// NEW: Reverse mapping for cargo type (API → UI)
+function reverseMapCargoType(apiType) {
+  if (!apiType) return "General";
+  const t = apiType.toUpperCase();
+  if (t === "IMO" || t === "OOG_IMO" || t === "REEFER_IMO") return "Hazardous";
+  if (t === "REEFER") return "Perishable";
+  if (t === "OOG") return "Oversized";
+  if (t === "LQUID") return "Liquid";
+  if (t === "GENERAL" || t === "DRY") return "General";
+  return "General";
 }
 
 function extractContainerSize(type) {
@@ -235,7 +251,6 @@ function extractContainerSize(type) {
 function extractContainerTypeCategory(type) {
   if (!type) return "STANDARD";
   const t = type.toLowerCase();
-  // Fixed logic to include "refrigerated"
   if (t.includes("reefer") || t.includes("refrigerated")) return "REEFER";
   if (t.includes("flat")) return "FLAT_RACK";
   if (t.includes("open")) return "OPEN_TOP";
@@ -244,10 +259,181 @@ function extractContainerTypeCategory(type) {
   return "STANDARD";
 }
 
+// NEW: Build container type string from API values
+function buildContainerTypeString(containerType, containerSize) {
+  if (!containerType && !containerSize) return "";
+  
+  const size = containerSize?.replace("SIZE_", "") || "40";
+  let type = containerType || "STANDARD";
+  
+  // Convert API type to display format
+  const typeMap = {
+    "REEFER": "Reefer",
+    "FLAT_RACK": "Flat Rack",
+    "OPEN_TOP": "Open Top",
+    "TANK": "Tank",
+    "HIGH_CUBE": "High Cube",
+    "STANDARD": "Standard"
+  };
+  
+  const displayType = typeMap[type.toUpperCase()] || "Standard";
+  return `${size}' ${displayType}`;
+}
+
 function mapAccessCondition(input) {
   if (!input) return "EASY";
   const v = input.toLowerCase();
   if (v.includes("limited")) return "LIMITED";
   if (v.includes("difficult") || v.includes("restricted")) return "DIFFICULT";
   return "EASY";
+}
+
+// NEW: Reverse mapping for access conditions
+function reverseMapAccessCondition(apiValue) {
+  if (!apiValue) return "";
+  const v = apiValue.toUpperCase();
+  if (v === "LIMITED") return "limited access";
+  if (v === "DIFFICULT") return "difficult access";
+  if (v === "EASY") return "easy access";
+  return "";
+}
+
+// NEW: Map service addons from API to UI format
+function mapServiceAddonsFromApi(serviceAddons) {
+  if (!serviceAddons) return {};
+
+  return {
+    changeDestination: serviceAddons.changeDestination || false,
+    extraFreeTime: serviceAddons.extraFreeTime || false,
+    portAgent: serviceAddons.portAgent || false,
+    readyToLoad: serviceAddons.readyToLoad || false,
+    reduceEmission: serviceAddons.reduceEmission || false,
+    reposition: serviceAddons.repositionning || false,
+    socForAll: serviceAddons.socForAll || false,
+    trackLive: serviceAddons.liveTracking || false,
+    trokeTrace: serviceAddons.trokeTrace || false,
+    
+    customsBrokerage: serviceAddons.customerBrokerage ? {
+      enabled: true,
+      origin: serviceAddons.customerBrokerage === "ORIGIN" || serviceAddons.customerBrokerage === "BOTH",
+      destination: serviceAddons.customerBrokerage === "DESTINATION" || serviceAddons.customerBrokerage === "BOTH"
+    } : {
+      enabled: false,
+      origin: false,
+      destination: false
+    },
+    
+    inspection: serviceAddons.inspection ? {
+      enabled: true,
+      type: serviceAddons.inspection.type || ""
+    } : {
+      enabled: false,
+      type: ""
+    },
+    
+    insurance: {
+      enabled: !!serviceAddons.insurance && serviceAddons.insurance > 0,
+      cargoValue: String(serviceAddons.insurance || ""),
+      currency: serviceAddons.insuranceCurrency || "EURO"
+    },
+    
+    stuffing: serviceAddons.stuffing ? {
+      enabled: true,
+      equipment: serviceAddons.stuffing.toLowerCase() || "manually",
+      resources: String(serviceAddons.stuffingNumberWorkers || "")
+    } : {
+      enabled: false,
+      equipment: "manually",
+      resources: ""
+    },
+    
+    unstuffing: serviceAddons.unStuffing ? {
+      enabled: true,
+      equipment: serviceAddons.unStuffing.toLowerCase() || "manually",
+      resources: String(serviceAddons.unStuffingNumberWorkers || "")
+    } : {
+      enabled: false,
+      equipment: "manually",
+      resources: ""
+    }
+  };
+}
+
+// shipmentMapper.js
+export function applyQuoteToStore(quote, setField) {
+  setField("mode", quote.mode || "")
+  setField("shipmentType", quote.shipmentType || "")
+  setField("containerType", quote.containerType || "")
+
+  setField("cargoType", quote.cargoType || "")
+  setField("commodity", quote.commodity || "")
+  setField("grossWeight", quote.grossWeight || "")
+
+  const pol = quote.polCity || quote.pol || ""
+  const pod = quote.podCity || quote.pod || ""
+
+  setField("pol", pol)
+  setField("pod", pod)
+
+  setField("polCity", quote.polCity || "")
+  setField("polCountry", quote.polCountry || "")
+  setField("polCountryCode", quote.polCountryCode || "")
+  setField("polLat", quote.polLat || "")
+  setField("polLon", quote.polLon || "")
+
+  setField("podCity", quote.podCity || "")
+  setField("podCountry", quote.podCountry || "")
+  setField("podCountryCode", quote.podCountryCode || "")
+  setField("podLat", quote.podLat || "")
+  setField("podLon", quote.podLon || "")
+
+  setField("plorChecked", !!quote.plorChecked)
+  setField("plor", quote.plor || "")
+  setField("plorCity", quote.plorCity || "")
+  setField("plorCountry", quote.plorCountry || "")
+  setField("plorCountryCode", quote.plorCountryCode || "")
+  setField("plorLat", quote.plorLat || "")
+  setField("plorLon", quote.plorLon || "")
+
+  setField("plodChecked", !!quote.plodChecked)
+  setField("plod", quote.plod || "")
+  setField("plodCity", quote.plodCity || "")
+  setField("plodCountry", quote.plodCountry || "")
+  setField("plodCountryCode", quote.plodCountryCode || "")
+  setField("plodLat", quote.plodLat || "")
+  setField("plodLon", quote.plodLon || "")
+
+  setField("pickupChecked", !!quote.pickupChecked)
+  setField("pickupLocation", quote.pickupLocation || "")
+  setField("pickupCity", quote.pickupCity || "")
+  setField("pickupCountry", quote.pickupCountry || "")
+  setField("pickupCountryCode", quote.pickupCountryCode || "")
+  setField("pickupLat", quote.pickupLat || "")
+  setField("pickupLon", quote.pickupLon || "")
+
+  setField("returnChecked", !!quote.returnChecked)
+  setField("returnLocation", quote.returnLocation || "")
+  setField("returnCity", quote.returnCity || "")
+  setField("returnCountry", quote.returnCountry || "")
+  setField("returnCountryCode", quote.returnCountryCode || "")
+  setField("returnLat", quote.returnLat || "")
+  setField("returnLon", quote.returnLon || "")
+
+  setField("coldTreatment", quote.coldTreatment || {})
+  setField("probes", quote.probes || {})
+  setField("humidity", quote.humidity || {})
+  setField("genset", quote.genset || {})
+
+  setField("cargo", quote.cargo || {})
+  setField("liftgate", quote.liftgate || {})
+  setField("accsesConditions", quote.accsesConditions || "")
+
+  if (quote.addons) {
+    setField("addons", quote.addons)
+  }
+
+  setField(
+    "wizardSelection",
+    quote.wizardSelection || { mainCategory: "", subCategory: "" }
+  )
 }

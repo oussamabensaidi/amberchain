@@ -1,16 +1,16 @@
 import React, { useState } from "react"
 import { useShipmentStore } from "@/store/shipmentStore"
 import { useUserQuotes } from "@/queries/useUserQuotes"
-
+import { applyQuoteToStore } from "@/mappers/shipmentMapper"
 export default function QuoteHelperCard({ onSelectQuote, showCreateNew = false, onCreateNew, userId }) {
   const { setField } = useShipmentStore()
   const [searchTerm, setSearchTerm] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [showAllLatest, setShowAllLatest] = useState(false)
 
-  // Fetch quotes using the custom hook
   const { data: quotes = [], isLoading, isError } = useUserQuotes(userId)
-console.log("Rendering QuoteHelperCard with quotes:", quotes)
+  console.log("Rendering QuoteHelperCard with quotes:", quotes)
+
   const filteredQuotes = quotes.filter((q) => {
     if (!searchTerm) return true
     const term = searchTerm.toLowerCase()
@@ -21,48 +21,22 @@ console.log("Rendering QuoteHelperCard with quotes:", quotes)
       q.customer.toLowerCase().includes(term)
     )
   })
+
   const latestQuotes = [...quotes].sort((a, b) => {
-    // Sort by creation date descending (newest first)
     return new Date(b.createdAt) - new Date(a.createdAt)
   })
   
   const visibleLatestQuotes = showAllLatest ? latestQuotes : latestQuotes.slice(0, 4)
   const hasMoreLatest = latestQuotes.length > 4
 
-  const applyQuoteToStore = (quote) => {
-    setField("mode", quote.mode || "")
-    setField("shipmentType", quote.shipmentType || "")
-    setField("containerType", quote.containerType || "")
-    const pol = quote.data?.pol || quote.pol || ""
-    const pod = quote.data?.pod || quote.pod || ""
-    setField("pol", pol)
-    setField("pod", pod)
-    setField("plorChecked", quote.plorChecked || false)
-    setField("plor", quote.plor || "")
-    setField("plodChecked", quote.plodChecked || false)
-    setField("plod", quote.plod || "")
-    setField("pickupChecked", quote.pickupChecked || false)
-    setField("pickupLocation", quote.pickupLocation || "")
-    setField("returnChecked", quote.returnChecked || false)
-    setField("returnLocation", quote.returnLocation || "")
-    setField("cargoType", quote.cargoType || "")
-    setField("commodity", quote.commodity || "")
-    setField("grossWeight", quote.grossWeight || "")
-    setField("wizardSelection", quote.wizardSelection || { mainCategory: "", subCategory: "" })
-    setField("coldTreatment", quote.coldTreatment || {})
-    setField("probes", quote.probes || {})
-    setField("humidity", quote.humidity || {})
-    setField("genset", quote.genset || {})
-    setField("temperatureSchedule", quote.temperatureSchedule || {})
-    setField("cargo", quote.cargo || {})
-    setField("liftgate", quote.liftgate || {})
-    setField("accsesConditions", quote.accsesConditions || "")
-  }
+  
 
-  const handleUseQuote = (quote) => {
-    applyQuoteToStore(quote)
-    if (onSelectQuote) onSelectQuote(quote)
-  }
+
+const handleUseQuote = (quote) => {
+  applyQuoteToStore(quote, setField)
+  onSelectQuote?.(quote)
+}
+
 
   return (
     <div className="w-full max-w-xl rounded-2xl border bg-card p-6 shadow-md space-y-6">
