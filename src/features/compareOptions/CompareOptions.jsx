@@ -7,6 +7,7 @@ import { useShipmentStore } from "@/store/shipmentStore"
 import { DUMMY_SHIPMENT } from "@/constants/dummyShipment"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
+import ShipmentSummaryCard from "@/components/ShipmentSummaryCard"
 
 export default function CompareOptions({
   enableServicePopup = true,
@@ -69,7 +70,7 @@ export default function CompareOptions({
   }
 
   return (
-    <div className="gap-4 flex flex-col">
+    <div className="gap-4 flex flex-col ">
       <DashNav DashTitle={t("pageTitles.compare-options")} />
 
       <h2 className="text-base font-semibold">
@@ -77,10 +78,21 @@ export default function CompareOptions({
       </h2>
 
       {!showResults ? (
-        <ShipmentForm
-          onFormComplete={handleFormComplete}
-          enableServicePopup={enableServicePopup}
-        />
+        /* Form Layout with Summary Card */
+        <div className="flex gap-6">
+          {/* Form on the left - grows naturally */}
+          <div className="flex-1">
+            <ShipmentForm
+              onFormComplete={handleFormComplete}
+              enableServicePopup={enableServicePopup}
+            />
+          </div>
+
+          {/* Summary Card on the right - sticky, grows only as needed */}
+          <div className="w-80 sticky top-4 h-fit">
+            <ShipmentSummaryCard data={data} />
+          </div>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between bg-muted/20 border rounded-md px-3 py-2">

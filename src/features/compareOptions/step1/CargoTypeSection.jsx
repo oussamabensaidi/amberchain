@@ -21,16 +21,16 @@ export default function CargoTypeSection({ cargoType, data, setField, errors = {
   const transition = { duration: 0.35, ease: "easeOut" }
 
   return (
-    <motion.section ref={forwardedRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={transition} className="cargo-type-section space-y-5">
+    <motion.section ref={forwardedRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={transition} className="cargo-type-section space-y-3">
       <h2 className="text-2xl font-semibold text-center">Cargo Type</h2>
-      <div className="flex flex-wrap justify-center gap-5">
+      <div className="flex flex-wrap justify-center gap-3">
         {cargoTypes.map(c => {
           const Icon = c.icon
           const active = cargoType === c.value
           return (
             <motion.div key={c.value} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
               onClick={() => setField("cargoType", c.value)}
-              className={`cursor-pointer flex flex-col items-center justify-center p-5 rounded-xl border-2 transition-all duration-200 w-[140px] ${active ? "bg-primary text-primary-foreground border-primary shadow-md" : "hover:border-primary hover:bg-accent hover:text-accent-foreground"}`}
+              className={`cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 w-[120px] ${active ? "bg-primary text-primary-foreground border-primary shadow-md" : "hover:border-primary hover:bg-accent hover:text-accent-foreground"}`}
             >
               <Icon className="w-10 h-10 mb-2" />
               <span className="font-medium">{c.label}</span>
@@ -51,8 +51,8 @@ export default function CargoTypeSection({ cargoType, data, setField, errors = {
       )}
 
       {cargoType && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={transition} className="mt-6 border-t pt-6 space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={transition} className="mt-4 border-t pt-4 space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div id="commodity" className="space-y-2">
               <Label className="text-sm font-medium text-foreground">Commodity</Label>
               <CommoditySearchSelect value={data.commodity || ""} onChange={v => setField("commodity", v)} placeholder="Search commodities" />

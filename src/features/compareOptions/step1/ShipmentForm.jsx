@@ -214,7 +214,7 @@ const completeSubmission = async (transformedPayload) => {
 
   return (
     <div className="w-full flex justify-center">
-      <form onSubmit={handleSubmit} className="w-3/4 space-y-10 bg-card p-8 rounded-2xl border shadow-xl">
+      <form onSubmit={handleSubmit} className="w-full space-y-6 bg-card p-6 rounded-2xl border shadow-xl">
 
         {/* Mode selector remains (unchanged behavior / placement can be kept below POL/POD) */}
         <div className="mode-section">

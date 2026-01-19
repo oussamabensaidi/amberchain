@@ -13,7 +13,7 @@ export default function ShipmentTypeSection({ mode, shipmentType, setField, erro
   const { data } = useShipmentStore()
   return (
     <motion.section ref={forwardedRef} className="shipment-type-section" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={transition}>
-      <h2 className="text-2xl font-semibold text-center mb-4">Shipment Type</h2>
+      <h2 className="text-2xl font-semibold text-center mb-3">Shipment Type</h2>
       {/**
        * Responsive layout:
        * - If there are exactly 2 options, render as a centered horizontal row for better balance.
@@ -37,7 +37,7 @@ export default function ShipmentTypeSection({ mode, shipmentType, setField, erro
                   type="button"
                   aria-pressed={shipmentType === type}
                   variant={shipmentType === type ? "default" : "outline"}
-                  className={`relative flex flex-col items-center text-center h-full gap-3 p-5 rounded-xl transition-all min-w-[180px] ${
+                  className={`relative flex flex-col items-center text-center h-full gap-3 p-4 rounded-xl transition-all min-w-[160px] ${
                     shipmentType === type
                       ? "bg-primary text-primary-foreground shadow-lg ring-2 ring-primary ring-offset-2"
                       : "bg-card hover:bg-accent hover:text-accent-foreground"
@@ -75,7 +75,7 @@ export default function ShipmentTypeSection({ mode, shipmentType, setField, erro
       )}
 
       {(mode === "sea" || mode === "rail" || mode === "road") && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={transition} className="mt-6 space-y-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={transition} className="mt-4 space-y-3">
           {(() => {
             const isFCL = shipmentType === "FCL"
             return (

@@ -30,12 +30,12 @@ export default function LocationSection({ data, setField, labels, errors = {}, f
       ref={forwardedRef}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <h2 className="text-2xl font-semibold text-center"></h2>
 
       {/* POL & POD */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4">
         <LocationInput
           id="pol"
           label={polLabel}
@@ -83,7 +83,7 @@ export default function LocationSection({ data, setField, labels, errors = {}, f
 
       {/* PLOR & PLOD (hidden for combined mode) */}
       {(data.mode !== "combined" && showPlorPlod) && (
-        <div className="grid md:grid-cols-2 gap-6 mt-6">
+        <div className="grid md:grid-cols-2 gap-4 mt-4">
           {["plor", "plod"].map((field) => {
             const checked = data[`${field}Checked`] || false;
             const label = currentLabels[field];
