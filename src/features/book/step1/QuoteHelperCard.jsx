@@ -8,7 +8,10 @@ export default function QuoteHelperCard({ onSelectQuote, showCreateNew = false, 
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [showAllLatest, setShowAllLatest] = useState(false)
 
-  const { data: quotes = [], isLoading, isError } = useUserQuotes(userId)
+  // useUserQuotes now returns { quotes, pagination } structure
+  const { data: quotesData, isLoading, isError } = useUserQuotes(userId, 0, 100)
+  const quotes = quotesData?.quotes || []
+  
   console.log("Rendering QuoteHelperCard with quotes:", quotes)
 
   const filteredQuotes = quotes.filter((q) => {
