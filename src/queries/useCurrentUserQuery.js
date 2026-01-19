@@ -1,17 +1,32 @@
 import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 
 
 const fetchCurrentUser = async () => {
-  // Only return a demo user when a token is present in localStorage.
+  // Only fetch when a token is present in localStorage.
   // This avoids auto-authenticating users when no token exists (e.g., after logout).
   const token = localStorage.getItem('token');
   if (!token) {
     return null;
   }
 
-  // Simulate network latency for development/mock environment
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return { id: 1, name: 'Demo User', email: 'demo@example.com', role: 'client' };
+  try {
+    const response = await axios.get(
+      `${import.meta.env.VITE_APP_DOMAIN}/users`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    
+    console.log('Fetched current user:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    return null;
+  }
 };
 
 export default function useCurrentUserQuery() {
@@ -19,5 +34,6 @@ export default function useCurrentUserQuery() {
     queryKey: ['currentUser'],
     queryFn: fetchCurrentUser,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
   });
 }
