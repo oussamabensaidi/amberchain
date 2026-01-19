@@ -9,7 +9,7 @@ export default function QuoteHelperCard({ onSelectQuote, showCreateNew = false, 
   const [showAllLatest, setShowAllLatest] = useState(false)
 
   // useUserQuotes now returns { quotes, pagination } structure
-  const { data: quotesData, isLoading, isError } = useUserQuotes(userId, 0, 100)
+  const { data: quotesData, isLoading, isError } = useUserQuotes(userId, 0, 20)
   const quotes = quotesData?.quotes || []
   
   console.log("Rendering QuoteHelperCard with quotes:", quotes)
