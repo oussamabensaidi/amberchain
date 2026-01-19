@@ -15,33 +15,58 @@ import {
   SelectValue,
 } from "../ui/select";
 
-export function DataTablePagination({ table }) {
+export function DataTablePagination({ table, paginationMetadata }) {
   const { t } = useTranslation();
+
+  // Use server-side pagination metadata if available, otherwise client-side
+  const pageSize = table.getState().pagination.pageSize;
+  const pageIndex = table.getState().pagination.pageIndex;
+  const currentPage = pageIndex + 1;
+
+  let totalPages, pageCount, selectedCount, totalCount, canNextPage, canPreviousPage;
+
+  if (paginationMetadata) {
+    // Server-side pagination
+    totalPages = paginationMetadata.totalPages;
+    pageCount = totalPages;
+    selectedCount = table.getFilteredSelectedRowModel().rows.length;
+    totalCount = paginationMetadata.total;
+    canNextPage = paginationMetadata.hasNextPage;
+    canPreviousPage = paginationMetadata.hasPreviousPage;
+  } else {
+    // Client-side pagination
+    totalPages = table.getPageCount();
+    pageCount = table.getPageCount();
+    selectedCount = table.getFilteredSelectedRowModel().rows.length;
+    totalCount = table.getFilteredRowModel().rows.length;
+    canNextPage = table.getCanNextPage();
+    canPreviousPage = table.getCanPreviousPage();
+  }
 
   return (
     <div className="dataTablePagination flex items-center justify-start sm:justify-between flex-col sm:flex-row">
       <div className="text-muted-foreground w-full sm:w-fit sm:flex-1 text-sm">
         {t("pagination.selected", {
-          count: table.getFilteredSelectedRowModel().rows.length,
-          total: table.getFilteredRowModel().rows.length,
+          count: selectedCount,
+          total: totalCount,
         })}
       </div>
       <div className="flex items-center flex-wrap sm:flex-nowrap w-full sm:w-fit">
         <div className="flex items-center gap-2 w-full sm:w-fit justify-between sm:justify-start">
           <p className="text-sm font-medium">{t("pagination.rowsPerPage")}</p>
           <Select
-            value={`${table.getState().pagination.pageSize}`}
+            value={`${pageSize}`}
             onValueChange={(value) => {
               table.setPageSize(Number(value));
             }}
           >
             <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
+              <SelectValue placeholder={pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
-              {[10, 20, 25, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
-                  {pageSize}
+              {[10, 20, 25, 30, 40, 50].map((size) => (
+                <SelectItem key={size} value={`${size}`}>
+                  {size}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -50,8 +75,8 @@ export function DataTablePagination({ table }) {
         <div className="flex items-center justify-between sm:justify-center w-full sm:w-fit ml-4">
           <div className="flex items-center text-sm font-medium mr-4">
             {t("pagination.pageInfo", {
-              currentPage: table.getState().pagination.pageIndex + 1,
-              totalPages: table.getPageCount(),
+              currentPage,
+              totalPages: pageCount,
             })}
           </div>
           <div className="flex items-center space-x-2 -mr-2 sm:mr-0">
@@ -60,7 +85,7 @@ export function DataTablePagination({ table }) {
               size="icon"
               className="hidden size-8 lg:flex"
               onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
+              disabled={!canPreviousPage}
             >
               <span className="sr-only">{t("pagination.firstPage")}</span>
               <ChevronsLeft />
@@ -70,7 +95,7 @@ export function DataTablePagination({ table }) {
               size="icon"
               className="size-8"
               onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              disabled={!canPreviousPage}
             >
               <span className="sr-only">{t("pagination.previousPage")}</span>
               <ChevronLeft />
@@ -80,7 +105,7 @@ export function DataTablePagination({ table }) {
               size="icon"
               className="size-8"
               onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              disabled={!canNextPage}
             >
               <span className="sr-only">{t("pagination.nextPage")}</span>
               <ChevronRight />
@@ -89,8 +114,8 @@ export function DataTablePagination({ table }) {
               variant="outline"
               size="icon"
               className="hidden size-8 lg:flex"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
+              onClick={() => table.setPageIndex(pageCount - 1)}
+              disabled={!canNextPage}
             >
               <span className="sr-only">{t("pagination.lastPage")}</span>
               <ChevronsRight />

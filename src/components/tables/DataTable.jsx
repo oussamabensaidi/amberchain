@@ -32,11 +32,24 @@ export function DataTable({
     setSelectedRows,
     externalRowSelectionResetKey,
     initialExpandedRowIndex,
+    // Server-side pagination props
+    pagination,
+    onPaginationChange,
+    paginationMetadata,
 }) {
     const [sorting, setSorting] = useState([]);
     const [rowSelection, setRowSelection] = useState({});
     const [expanded, setExpanded] = useState({});
     const [columnVisibility, setColumnVisibility] = useState(initialColumnVisibility || {});
+
+    // Use external pagination state if provided, otherwise use internal
+    const internalPagination = useState({
+        pageIndex: 0,
+        pageSize: 10,
+    });
+    const [internalPaginationState, setInternalPaginationState] = internalPagination;
+    
+    const activePaginationState = pagination || internalPaginationState;
 
     const table = useReactTable({
         data,
@@ -48,23 +61,41 @@ export function DataTable({
             columnFilters,
             columnVisibility,
             globalFilter,
+            pagination: activePaginationState,
             ...(expandable && { expanded }),
         },
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        // Only apply client-side pagination in non-manual mode
+        ...(!(!!onPaginationChange) && { getPaginationRowModel: getPaginationRowModel() }),
         ...(expandable && { getExpandedRowModel: getExpandedRowModel() }),
         onRowSelectionChange: setRowSelection,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         onColumnVisibilityChange: setColumnVisibility,
         onExpandedChange: setExpanded,
+        onPaginationChange: (updater) => {
+            const newPagination = typeof updater === 'function' ? updater(activePaginationState) : updater;
+            if (onPaginationChange) {
+                // Server-side pagination mode
+                onPaginationChange(newPagination);
+            } else {
+                // Client-side pagination mode
+                setInternalPaginationState(newPagination);
+            }
+        },
+        // For server-side pagination, use manual pagination
+        manualPagination: !!onPaginationChange,
+        rowCount: paginationMetadata?.total,
     });
 
     useEffect(() => {
-        table.setPageIndex(0);
-    }, [columnFilters, sorting]);
+        // Only reset page index in client-side mode
+        if (!onPaginationChange) {
+            table.setPageIndex(0);
+        }
+    }, [columnFilters, sorting, onPaginationChange, table]);
 
     useEffect(() => {
         if (searchTerm && data.length === 1) {
@@ -127,7 +158,7 @@ export function DataTable({
                 onRowClick={handleRowClick}
                 isLoading={isLoading}
             />
-            <DataTablePagination table={table} />
+            <DataTablePagination table={table} paginationMetadata={paginationMetadata} />
         </>
     );
 }

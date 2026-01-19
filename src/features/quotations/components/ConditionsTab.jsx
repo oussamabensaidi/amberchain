@@ -30,7 +30,7 @@ export default function ConditionsTab({ conditions, t }) {
                     <div className="font-medium mb-2">{t('quotations.conditions.additionalInfo.title')}</div>
                     <p>{t('quotations.conditions.additionalInfo.line1')}</p>
                     <p>{t('quotations.conditions.additionalInfo.line2')}</p>
-                    <p>{t('quotations.conditions.additionalInfo.line3', { cargoTypes: conditions.additionalInfo.cargoTypes.join(', ') })}</p>
+                    {/* <p>{t('quotations.conditions.additionalInfo.line3', { cargoTypes: conditions.additionalInfo.cargoTypes.join(', ') })}</p> */}
                     <p>{t('quotations.conditions.additionalInfo.line4')}</p>
                 </div>
             </div>

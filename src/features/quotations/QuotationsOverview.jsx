@@ -2,24 +2,50 @@ import { useTranslation } from "react-i18next";
 import { DataTable } from "@/components/tables/DataTable";
 import { getColumns } from "./columns";
 import QuotationDetails from "./QuotationDetails.jsx";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import DashboardSearch from "@/components/dashboard/DashboardSearch";
 import DashNav from "@/components/dashboard/DashNav";
 import { useQuotationsQuery } from "@/queries/useQuotationsQuery";
+import { useUserQuotes } from "@/queries/useUserQuotes";
+import useCurrentUserQuery from "@/queries/useCurrentUserQuery";
 import SuccessBanner from "@/components/ui/SuccessBanner";
 import { useSubmittedBookingBanner } from "@/hooks/useSubmittedBookingBanner";
 
 export default function QuotationsOverview({ data: propData }) {
     const { t } = useTranslation();
     const [columnFilters, setColumnFilters] = useState([]);
+    const [pagination, setPagination] = useState({
+        pageIndex: 0,
+        pageSize: 10,
+    });
     const { show: showSuccessBanner, dismiss } = useSubmittedBookingBanner();
 
-    const { data: fetchedData, isLoading: isFetching } = useQuotationsQuery({
-        enabled: !propData,
-    });
+    // Get current user
+    const { data: currentUser } = useCurrentUserQuery();
 
-    const tableData = propData || fetchedData;
-    const isLoading = propData ? false : isFetching;
+    console.log('QuotationsOverview - currentUser:', currentUser);
+    console.log('QuotationsOverview - propData:', propData);
+
+    // Reset pagination to first page when filters change
+    useEffect(() => {
+        setPagination({
+            pageIndex: 0,
+            pageSize: 10,
+        });
+    }, [columnFilters]);
+
+    // Use useUserQuotes for server-side pagination and filtering
+    // Falls back to useQuotationsQuery if propData is provided
+    const { data: userQuotesData, isLoading: isUserQuotesLoading } = useUserQuotes(
+        propData ? null : currentUser?.id,
+        pagination.pageIndex,
+        pagination.pageSize,
+        columnFilters
+    );
+
+    // Support both propData and API-fetched data
+    const tableData = propData || userQuotesData?.quotes || [];
+    const isLoading = propData ? false : isUserQuotesLoading;
 
     const activeMode = useMemo(() => {
         const modeFilter = columnFilters.find(f => f.id === 'mode');
@@ -41,6 +67,12 @@ export default function QuotationsOverview({ data: propData }) {
         { value: "expired", label: t('quotations.common.expired') },
         { value: "confirmed", label: t('quotations.common.confirmed') },
     ];
+
+    // Handle pagination changes - trigger new API call with updated pageIndex or pageSize
+    const handlePaginationChange = (newPagination) => {
+        console.log('Pagination changed:', newPagination);
+        setPagination(newPagination);
+    };
 
     return (
         <>
@@ -85,6 +117,10 @@ export default function QuotationsOverview({ data: propData }) {
                         options: statusFilterOptions,
                     }]}
                     initialColumnVisibility={{ mode: false }}
+                    // Server-side pagination props
+                    pagination={!propData ? pagination : undefined}
+                    onPaginationChange={!propData ? handlePaginationChange : undefined}
+                    paginationMetadata={!propData ? userQuotesData?.pagination : undefined}
                 />
             </div>
             
