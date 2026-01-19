@@ -59,7 +59,7 @@ export default function QuotationsOverview({ data: propData }) {
         { value: "Air", label: t('quotations.modes.air') },
         { value: "Road", label: t('quotations.modes.road') },
         { value: "Rail", label: t('quotations.modes.rail') },
-        { value: "E-BUSINESS", label: t('quotations.modes.ebusiness') },
+        { value: "Combined", label: t('quotations.modes.ebusiness') },
     ];
 
     const statusFilterOptions = [
