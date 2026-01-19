@@ -22,6 +22,15 @@ function mapCargoType(sourceCargoType) {
   }
 }
 
+function mapShipmentMode(mode) {
+  if (!mode) return "SEA";
+  
+  const normalizedMode = mode.toLowerCase();
+  if (normalizedMode === "ecommerce") return "ECOMM";
+  
+  return normalizedMode.toUpperCase();
+}
+
 function transformToAPIFormat(sourceData) {
   return {
     cargoDetail: {
@@ -180,7 +189,7 @@ function transformToAPIFormat(sourceData) {
     },
     
     shipmentMethod: sourceData.shipmentType || "LCL",
-    shipmentMode: sourceData.mode?.toUpperCase() || "SEA",
+    shipmentMode: mapShipmentMode(sourceData.mode),
     status: "PENDING",
     trackId: "",
     updateDate: new Date().toISOString()

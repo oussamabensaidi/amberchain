@@ -102,7 +102,7 @@ export function toApiShipment(sourceData) {
 
     grossWeight: Number(sourceData.grossWeight) || 0,
     shipmentMethod: sourceData.shipmentType || "LCL",
-    shipmentMode: sourceData.mode?.toUpperCase() || "SEA",
+    shipmentMode: mapShipmentMode(sourceData.mode),
     status: "PENDING",
     trackId: "",
     creationDate: new Date().toISOString(),
@@ -216,6 +216,13 @@ function flattenLocation(prefix, loc) {
     [`${prefix}Lon`]: loc.lon || "",
     [`${prefix}`]: loc.city ? `${loc.city}, ${loc.countryCode}` : "",
   };
+}
+
+function mapShipmentMode(mode) {
+  if (!mode) return "SEA";
+  const normalizedMode = mode.toLowerCase();
+  if (normalizedMode === "ecommerce") return "ECOMM";
+  return normalizedMode.toUpperCase();
 }
 
 function mapCargoType(type) {
