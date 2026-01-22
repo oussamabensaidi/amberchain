@@ -1,8 +1,8 @@
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Package, MapPin, Ship, Train, Truck, Plane, ShoppingCart, ArrowRightLeft } from "lucide-react";
 import { useState } from "react";
-
-export default function ShipmentSummaryCard({ data = {} }) {
+import { Button } from "@/components/ui/button";
+export default function ShipmentSummaryCard({ data = {}, onAction }) {
   const [isMinimized, setIsMinimized] = useState(false);
 
   // Format addon display label
@@ -179,7 +179,7 @@ export default function ShipmentSummaryCard({ data = {} }) {
             ))}
 
             {/* Additional info section */}
-            <div className="mt-4 pt-3 border-t border-border/40">
+            {/* <div className="mt-4 pt-3 border-t border-border/40"> */}
               <div className="text-xs text-muted-foreground space-y-1">
                 {data.plorChecked && data.plor && (
                   <div className="flex justify-between">
@@ -206,7 +206,7 @@ export default function ShipmentSummaryCard({ data = {} }) {
                   </div>
                 )}
               </div>
-            </div>
+            {/* </div> */}
 
             {/* Service Addons Section */}
             {getEnabledAddons().length > 0 ? (
@@ -243,6 +243,18 @@ export default function ShipmentSummaryCard({ data = {} }) {
                 </div>
               </div>
             )}
+          <div className="mt-4 pt-3 border-t border-border/40">
+            <Button 
+              onClick={onAction}
+              type="submit" 
+              form="shipment-form"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              size="lg"
+            >
+              Compare Options
+            </Button>
+          </div>
+
           </CardContent>
         )}
       </Card>

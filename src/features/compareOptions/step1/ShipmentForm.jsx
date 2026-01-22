@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react"
 import { TRANSPORT_MODES } from "@/constants/CompareOptionsFields"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
@@ -18,8 +18,7 @@ import submitCompareOptions from "@/services/CompareOptionsService"
 import PopUp from "./PopUp"
 import { toast } from 'sonner';
 
-export default function ShipmentForm({ onFormComplete, enableServicePopup = true }) {
-
+const ShipmentForm = forwardRef(({ onFormComplete, enableServicePopup = true }, ref) => {
   const { data, setField, setComparisonResults } = useShipmentStore()
   const { mode, shipmentType, cargoType } = data
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
@@ -28,6 +27,7 @@ export default function ShipmentForm({ onFormComplete, enableServicePopup = true
   const [showError, setShowError] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
   const navigate = useNavigate()
+  const formRef = useRef(null);
 
   const modeRef = useRef(null)
   const shipmentTypeRef = useRef(null)
@@ -43,7 +43,11 @@ export default function ShipmentForm({ onFormComplete, enableServicePopup = true
       setField("cargoType", "")
     }
   }, [])
-
+useImperativeHandle(ref, () => ({
+    requestSubmit: () => {
+      handleSubmit({ preventDefault: () => {} });
+    }
+  }));
   // POL / POD labels come from locationLabels[mode] if available,
   // otherwise fallback to standard names
   const [polLabel, podLabel] = locationLabels[mode] || ["Place of origin", "Port of destination"]
@@ -214,7 +218,7 @@ const completeSubmission = async (transformedPayload) => {
 
   return (
     <div className="w-full flex justify-center">
-      <form onSubmit={handleSubmit} className="w-full space-y-6 bg-card p-6 rounded-2xl border shadow-xl">
+      <form id="shipment-form" onSubmit={handleSubmit} className="w-full space-y-6 bg-card p-6 rounded-2xl border shadow-xl" ref={formRef}>
 
         {/* Mode selector remains (unchanged behavior / placement can be kept below POL/POD) */}
         <div className="mode-section">
@@ -243,6 +247,7 @@ const completeSubmission = async (transformedPayload) => {
     setField={setField}
     error={fieldErrors.shipmentType}
     forwardedRef={shipmentTypeRef}
+    
   />
 )}
 
@@ -281,13 +286,13 @@ const completeSubmission = async (transformedPayload) => {
           )}
         </AnimatePresence>
         {(data.cargoType && mode !== "combined") && (<BookingForm />)}
-        { (data.mode || data.pol && data.pod)  && (
+        {/* { (data.mode || data.pol && data.pod)  && (
           <motion.section ref={submitRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={transition} className="flex justify-center ">
             <Button type="submit" size="lg" className="px-12 py-4 text-lg  bg-primary hover:bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300">
               {hasSubmitted ? "COMPARE OPTIONS" : "COMPARE OPTIONS"}
             </Button>
           </motion.section>
-          )} 
+          )}  */}
 
       </form>
 
@@ -307,4 +312,6 @@ const completeSubmission = async (transformedPayload) => {
 
   </div>
   )
-}
+})
+
+export default ShipmentForm;

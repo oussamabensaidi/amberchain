@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState ,useRef } from "react"
 import { useTranslation } from "react-i18next"
 import DashNav from "@/components/dashboard/DashNav"
 import ShipmentForm from "./step1/ShipmentForm"
@@ -17,13 +17,22 @@ export default function CompareOptions({
   prefillDummy = false,
 } = {}) {
   const { t } = useTranslation()
-
+  const formRef = useRef(null); // 👈 ADD THIS REF
   const {
     data,
     setField,
     setWizardSelection,
     reset, // 👈 REQUIRED
   } = useShipmentStore()
+
+
+const handleTriggerSubmit = () => {
+  console.log("Triggering form submit from Summary Card");
+    if (formRef.current) {
+      formRef.current.requestSubmit();
+    }
+  };
+
 
   const comparisonResults = data.comparisonResults || []
 
@@ -47,14 +56,14 @@ export default function CompareOptions({
   useEffect(() => {
     if (!prefillDummy) return
 
-    Object.entries(DUMMY_SHIPMENT).forEach(([key, value]) => {
-      if (key === "wizardSelection") return
-      setField(key, value)
-    })
+    // Object.entries(DUMMY_SHIPMENT).forEach(([key, value]) => {
+    //   if (key === "wizardSelection") return
+    //   setField(key, value)
+    // })
 
-    if (DUMMY_SHIPMENT.wizardSelection) {
-      setWizardSelection(DUMMY_SHIPMENT.wizardSelection)
-    }
+    // if (DUMMY_SHIPMENT.wizardSelection) {
+    //   setWizardSelection(DUMMY_SHIPMENT.wizardSelection)
+    // }
 
     setShowResults(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,6 +92,7 @@ export default function CompareOptions({
           {/* Form on the left - grows naturally */}
           <div className="flex-1">
             <ShipmentForm
+              ref={formRef}
               onFormComplete={handleFormComplete}
               enableServicePopup={enableServicePopup}
             />
@@ -90,7 +100,9 @@ export default function CompareOptions({
 
           {/* Summary Card on the right - sticky, grows only as needed */}
           <div className="w-80 sticky top-4 h-fit">
-            <ShipmentSummaryCard data={data} />
+            <ShipmentSummaryCard data={data} 
+            onAction={handleTriggerSubmit}
+            />
           </div>
         </div>
       ) : (
