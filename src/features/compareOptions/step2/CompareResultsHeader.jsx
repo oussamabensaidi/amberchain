@@ -8,6 +8,7 @@ import {
   Droplets, Calendar, ArrowRight
 } from "lucide-react"
 import { useShipmentStore } from "@/store/shipmentStore"
+import {Tooltip,TooltipContent,TooltipProvider,TooltipTrigger} from "@/components/ui/tooltip"
 import { BookingConfirmationPopup } from "@/components/ui/booking-confirmation-popup"
 import TransportationIcon from "@/components/icons/TransportationIcon"
 import { formatScheduleDate, formatTransitTime, calculateDaysUntilDeparture } from "../utils/scheduleUtils"
@@ -141,51 +142,59 @@ export default function CompareResultsHeader({
           </div>
 
           {/* Weight & Transit/Departure Info */}
-          <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted border border-border/50 shrink md:shrink-0">
-            <div className="flex items-center gap-1.5 whitespace-nowrap">
-              <Weight className={`w-4 h-4 ${modeIconColor}`} />
-              <span className="text-sm font-medium">
-                {data?.grossWeight ? `${data.grossWeight} kg` : "—"}
-              </span>
-            </div>
-            <div className="w-px h-4 bg-border" />
-            {transitTimeDays ? (
-                <div className="flex items-center gap-1.5 whitespace-nowrap">
-                  <Clock className={`w-4 h-4 ${modeIconColor}`} />
-                  <span className="text-sm font-medium">{transitTimeDays} days</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 whitespace-nowrap">
-                  <Timer className={`w-4 h-4 ${modeIconColor}`} />
-                  <span className="text-sm font-medium">
-                    {calculateDaysUntilDeparture(scheduleData?.departureDate) || "—"}
-                  </span>
-                </div>
-              )}
-
+<div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted border border-border/50 shrink md:shrink-0">
+  <div className="flex items-center gap-1.5 whitespace-nowrap">
+    <Weight className={`w-4 h-4 ${modeIconColor}`} />
+    <span className="text-sm font-medium">
+      {data?.grossWeight ? `${data.grossWeight} kg` : "—"}
+    </span>
+  </div>
+  <div className="w-px h-4 bg-border" />
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {transitTimeDays ? (
+          <div className="flex items-center gap-1.5 whitespace-nowrap cursor-help">
+            <Clock className={`w-4 h-4 ${modeIconColor}`} />
+            <span className="text-sm font-medium">{transitTimeDays} days</span>
           </div>
-
-          {/* Departure & Arrival Dates */}
-          <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted border border-border/50 shrink-0">
-            <div className="flex items-center gap-1.5 whitespace-nowrap">
-              <Calendar className={`w-4 h-4 ${modeIconColor}`} />
-              <span className="text-sm font-medium">
-                {departureDate ? new Date(departureDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
-              </span>
-              <ArrowRight className="w-3 h-3 text-muted-foreground" />
-              <span className="text-sm font-medium">
-                {arrivalDate ? new Date(arrivalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
-              </span>
-            </div>
-            {cutOffTime && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <span>Cut-off:</span>
-                <span className="font-medium">
-                  {new Date(cutOffTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
-              </div>
-            )}
+        ) : (
+          <div className="flex items-center gap-1.5 whitespace-nowrap cursor-help">
+            <Timer className={`w-4 h-4 ${modeIconColor}`} />
+            <span className="text-sm font-medium">
+              {calculateDaysUntilDeparture(scheduleData?.departureDate) || "—"}
+            </span>
           </div>
+        )}
+      </TooltipTrigger>
+     <TooltipContent className="px-3 py-2">
+  <div className="flex flex-col gap-2">
+    <div className="flex items-center gap-2">
+      <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">
+          {departureDate ? new Date(departureDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+        </span>
+        <ArrowRight className="w-3 h-3 text-muted-foreground" />
+        <span className="text-sm font-medium">
+          {arrivalDate ? new Date(arrivalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+        </span>
+      </div>
+    </div>
+    {cutOffTime && (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground border-t border-border/50 pt-2">
+        <AlertCircle className="w-3.5 h-3.5" />
+        <span>Cut-off:</span>
+        <span className="font-medium">
+          {new Date(cutOffTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+        </span>
+      </div>
+    )}
+  </div>
+</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+</div>
 
           {/* Vessel & Voyage Info */}
           {(vesselName || voyageNumber || serviceName) && (
