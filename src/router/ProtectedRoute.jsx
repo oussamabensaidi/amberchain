@@ -20,15 +20,12 @@ export default function ProtectedRoute() {
         // If backend returns a valid user, set it in the store
         if (fetched) {
           setAuth(fetched, token);
-        } else {
-          // No valid session on server side: clear auth and navigate to login
-          logout();
-          navigate('/auth/login', { replace: true });
         }
+        // If fetched is null, don't logout - just wait for user state to be set
+        // This prevents logout on transient network errors
       } catch (e) {
-        // On any error, clear auth and redirect to login
-        logout();
-        navigate('/auth/login', { replace: true });
+        // On error, just log and continue - don't logout on network errors
+        console.error('Error fetching connected user:', e);
       } finally {
         if (mounted) setIsFetchingUser(false);
       }

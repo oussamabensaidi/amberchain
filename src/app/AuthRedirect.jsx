@@ -6,14 +6,14 @@ import { useNavigate } from "react-router-dom";
 
 export default function AuthRedirect() {
   const navigate = useNavigate();
-  const { user, isLoading, setAuth } = useAuthStore();
+  const { user, isLoading, setAuth, token } = useAuthStore();
   const { data, isLoading: isQueryLoading, isFetched } = useCurrentUserQuery();
 
   useEffect(() => {
-    if (!isQueryLoading) {
-      setAuth(data || null);
+    if (!isQueryLoading && data) {
+      setAuth(data, token);
     }
-  }, [isQueryLoading, data]);
+  }, [isQueryLoading, data, setAuth, token]);
 
   useEffect(() => {
     if (isLoading || !isFetched) return;
