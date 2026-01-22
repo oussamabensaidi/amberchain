@@ -23,7 +23,8 @@ export default function CompareResultsHeader({
   toggle_button = true, 
   popupVariant = "booking",
   scheduleData = null,
-  resultMeta = {}
+  resultMeta = {},
+  headerOnly = false
 }) {
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false)
   const shipmentData = useShipmentStore((s) => s.data)
@@ -226,12 +227,14 @@ export default function CompareResultsHeader({
 
         {/* Right section: price & actions */}
         <div className="w-full md:w-auto ml-0 md:ml-auto flex items-center gap-3 md:gap-4 justify-between md:justify-end">
-          {/* Price */}
-          <div className="px-4 py-2 rounded-lg bg-muted/50 dark:bg-muted/30 border">
-            <div className="text-3xl font-bold text-foreground leading-none whitespace-nowrap">
-              {price ? `${price}` : '—'}
+          {/* Price - hidden when headerOnly */}
+          {!headerOnly && (
+            <div className="px-4 py-2 rounded-lg bg-muted/50 dark:bg-muted/30 border">
+              <div className="text-3xl font-bold text-foreground leading-none whitespace-nowrap">
+                {price ? `${price}` : '—'}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* CTA */}
           <Button

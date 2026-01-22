@@ -245,14 +245,12 @@ export default function ShipmentSummaryCard({ data = {}, onAction }) {
             )}
           <div className="mt-4 pt-3 border-t border-border/40">
             <Button 
-              onClick={onAction}
-              type="submit" 
-              form="shipment-form"
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-              size="lg"
-            >
-              Compare Options
-            </Button>
+                onClick={onAction}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                size="lg"
+              >
+                Compare Options
+              </Button>
           </div>
 
           </CardContent>

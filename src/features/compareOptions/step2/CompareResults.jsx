@@ -43,7 +43,8 @@ export default function CompareResults({
   const price = resultMeta?.price ?? priceOverride ?? "-"
   
   // Determine button label based on price
-  const finalCtaLabel = (price === null || price === "-") ? "Pre Book" : ctaLabel
+  // Determine button label based on price (unless headerOnly, then use the provided ctaLabel)
+  const finalCtaLabel = headerOnly ? ctaLabel : (price === null || price === "-") ? "Pre Book" : ctaLabel
   
   // Get shipment query context from store
   const shipmentContext = data.shipmentQueryContext || {}
@@ -163,6 +164,7 @@ const shipmentData = {
           onCtaClick={onCtaClick}
           toggle_button={toggle_button}
           popupVariant={popupVariant}
+          headerOnly={headerOnly}
         />
       </CardHeader>
 
