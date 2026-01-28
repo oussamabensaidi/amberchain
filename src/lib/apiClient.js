@@ -3,11 +3,12 @@ import axios from "axios";
 
 // Sanitize base URL (strip accidental surrounding quotes from .env)
 const baseURL = (import.meta.env.VITE_APP_DOMAIN || "").replace(/^['\"]|['\"]$/g, '');
-
+const token = localStorage.getItem("token");
 const apiClient = axios.create({
   baseURL,
   headers: {
     "Content-Type": "application/json",
+    "Authorization": token ? `Bearer ${token}` : "",
   },
 });
 
