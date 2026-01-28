@@ -54,6 +54,17 @@ apiClient.interceptors.response.use(
         console.error(`[apiClient][${debugId}] <- ERROR ${error.config.url}`, error.response?.status, error.response?.data || error.message);
       }
     } catch (e) {}
+
+    // Handle token expiration (401 Unauthorized)
+    if (error.response?.status === 401) {
+      // Clear token and user from localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      // Reload the page to trigger AuthRedirect and redirect to login
+      window.location.href = '/auth/login';
+    }
+
     return Promise.reject(error);
   }
 );

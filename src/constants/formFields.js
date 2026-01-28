@@ -5,10 +5,16 @@ export const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])\
 export const nameRegex = /^(?=.*[A-Za-z])[\sA-Za-z'.-]{2,}$/;
 // Allow Unicode letters (both uppercase and lowercase, including accented letters) and digits.
 // Use \p{L} to match any kind of letter; the `u` flag enables Unicode property escapes.
+// Supports French letters: é, è, ê, à, ù, ç, etc.
 export const generalTextRegex = /^(?=.*[\p{L}\d])[\s\p{L}\d&@#',./()\-]{2,}$/u;
-export const zipCodeRegex = /^[0-9]{5}(-[0-9]{4})?$/;
-// Require phone numbers to start with a leading 0, then allow digits/spaces/hyphen/parentheses.
-export const phoneRegex = /^0[\d\s\-()]{6,19}$/;
+// Allow zip codes: digits only (including those starting with 0) or format like 12345-6789
+export const zipCodeRegex = /^[0-9]+(-[0-9]{4})?$/;
+// Allow phone numbers in various formats:
+// - With leading 0: 0123456789
+// - With + prefix (international): +33123456789 or +33 1 23 45 67 89
+// - Without leading 0: 123456789
+// - With spaces/hyphens/parentheses: 0123 45 67 89 or (0)123-456-789
+export const phoneRegex = /^[\+]?[0-9][\d\s\-()]{6,19}$/;
 
 export const formFields = {
     firstName: {
