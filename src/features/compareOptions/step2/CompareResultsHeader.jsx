@@ -199,16 +199,28 @@ export default function CompareResultsHeader({
           {/* Vessel & Voyage Info */}
           {(vesselName || voyageNumber || serviceName) && (
             <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted border border-border/50 shrink-0">
-              {vesselName && (
+              {vesselName && serviceName ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1.5 whitespace-nowrap cursor-help">
+                        <Ship className={`w-4 h-4 ${modeIconColor}`} />
+                        <span className="text-sm font-medium">{vesselName}</span>
+                        {voyageNumber && <span className="text-sm text-muted-foreground">/ {voyageNumber}</span>}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="px-3 py-2 bg-secondary/40 border border-secondary/50">
+                      <span className="text-sm font-medium text-secondary-foreground">
+                        {serviceName}
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
                 <div className="flex items-center gap-1.5 whitespace-nowrap">
                   <Ship className={`w-4 h-4 ${modeIconColor}`} />
                   <span className="text-sm font-medium">{vesselName}</span>
                   {voyageNumber && <span className="text-sm text-muted-foreground">/ {voyageNumber}</span>}
-                </div>
-              )}
-              {serviceName && (
-                <div className="text-xs bg-secondary/30 px-2 py-0.5 rounded-full text-muted-foreground">
-                  {serviceName}
                 </div>
               )}
             </div>
