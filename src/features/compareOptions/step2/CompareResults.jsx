@@ -1,5 +1,6 @@
 // Updated CompareResults.jsx
 import {useState, useEffect} from "react"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { useShipmentStore } from "@/store/shipmentStore"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
@@ -152,20 +153,26 @@ const shipmentData = {
         </div>
       )}
       <CardHeader className="border-none px-8 gap-0">
-        <CompareResultsHeader
-          data={shipmentData}
-          expanded={expanded}
-          setExpanded={setExpanded}
-          scheduleData={normalizedSchedule}
-          price={price}
-          resultMeta={resultMeta}
-          ctaLabel={finalCtaLabel}
-          enableBookingPopup={enableBookingPopup}
-          onCtaClick={onCtaClick}
-          toggle_button={toggle_button}
-          popupVariant={popupVariant}
-          headerOnly={headerOnly}
-        />
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
+          <CompareResultsHeader
+            data={shipmentData}
+            expanded={expanded}
+            setExpanded={setExpanded}
+            scheduleData={normalizedSchedule}
+            price={price}
+            resultMeta={resultMeta}
+            ctaLabel={finalCtaLabel}
+            enableBookingPopup={enableBookingPopup}
+            onCtaClick={onCtaClick}
+            toggle_button={toggle_button}
+            popupVariant={popupVariant}
+            headerOnly={headerOnly}
+          />
+        </motion.div>
       </CardHeader>
 
       {!headerOnly && (

@@ -26,6 +26,7 @@ const ShipmentForm = forwardRef(({ onFormComplete, enableServicePopup = true }, 
   const [error, setError] = useState("")
   const [showError, setShowError] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const formRef = useRef(null);
 
@@ -158,6 +159,7 @@ useImperativeHandle(ref, () => ({
 
 // Complete submission and handle success/error states
 const completeSubmission = async (transformedPayload) => {
+  setIsLoading(true);
   try {
     console.log("SENDING TO API:", transformedPayload);
     const response = await submitCompareOptions(transformedPayload);
@@ -210,6 +212,8 @@ const completeSubmission = async (transformedPayload) => {
     console.error("Submission failed:", err);
     setError("Failed to connect to the server. Please try again.");
     setShowError(true);
+  } finally {
+    setIsLoading(false);
   }
 };
 
@@ -217,7 +221,23 @@ const completeSubmission = async (transformedPayload) => {
 
 
   return (
-    <div className="w-full flex justify-center">
+    <div className="w-full flex justify-center relative">
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center z-50 pointer-events-none"
+          >
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              <span className="text-sm font-medium text-foreground">Processing...</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <form id="shipment-form" onSubmit={handleSubmit} className="w-full space-y-6 bg-card p-6 rounded-2xl border shadow-xl" ref={formRef}>
 
         {/* Mode selector remains (unchanged behavior / placement can be kept below POL/POD) */}
