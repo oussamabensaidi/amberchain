@@ -199,9 +199,9 @@ function buildLocation(prefix, src) {
     city: src[`${prefix}City`] || src[prefix] || "",
     country: src[`${prefix}Country`] || src[prefix] || "",
     countryCode: src[`${prefix}CountryCode`] || "",
-    lat: src[`${prefix}Lat`] || "",
-    lon: src[`${prefix}Lon`] || "",
-    id: 0,
+    lat: src[`${prefix}Lat`] ? String(src[`${prefix}Lat`]) : "",
+    lon: src[`${prefix}Lon`] ? String(src[`${prefix}Lon`]) : "",
+    id: src[`${prefix}LocationId`] || 0,
     locationType: "PORT",
   };
 }
