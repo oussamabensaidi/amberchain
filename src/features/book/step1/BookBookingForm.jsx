@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, ArrowRight, ArrowLeft, Package, MapPin, Truck, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useShipmentStore } from "@/store/shipmentStore"
+import useAuthStore from "@/store/authStore"
 import { locationLabels } from "@/features/compareOptions/utils/modeLabels"
 import LocationSection from "@/features/compareOptions/step1/LocationSection"
 import BookModeCargoShipmentForm from "@/features/book/bookComponent/BookModeCargoShipmentForm"
@@ -14,6 +15,7 @@ import PopUp from "../../compareOptions/step1/PopUp"
 import BookQuotationDetails from "@/features/book/step1/BookQuotationDetails"
 export default function BookBookingForm({ enableServicePopup = true, onComplete, onBack }) {
   const { data, setField } = useShipmentStore()
+  const { user } = useAuthStore()
   const { mode, shipmentType, cargoType } = data
 
   const [activeStep, setActiveStep] = useState(1)
@@ -456,7 +458,7 @@ export default function BookBookingForm({ enableServicePopup = true, onComplete,
 
           {/* Quote helper card on the right */}
           <div className="hidden lg:block">
-            <QuoteHelperCard onSelectQuote={handleUseQuote} />
+            <QuoteHelperCard onSelectQuote={handleUseQuote} user={user} />
           </div>
         </div>
       </div>

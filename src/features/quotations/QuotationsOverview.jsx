@@ -37,7 +37,7 @@ export default function QuotationsOverview({ data: propData }) {
     // Use useUserQuotes for server-side pagination and filtering
     // Falls back to useQuotationsQuery if propData is provided
     const { data: userQuotesData, isLoading: isUserQuotesLoading } = useUserQuotes(
-        propData ? null : currentUser?.id,
+        propData ? null : currentUser,
         pagination.pageIndex,
         pagination.pageSize,
         columnFilters

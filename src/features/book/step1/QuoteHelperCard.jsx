@@ -2,14 +2,14 @@ import React, { useState } from "react"
 import { useShipmentStore } from "@/store/shipmentStore"
 import { useUserQuotes } from "@/queries/useUserQuotes"
 import { applyQuoteToStore } from "@/mappers/shipmentMapper"
-export default function QuoteHelperCard({ onSelectQuote, showCreateNew = false, onCreateNew, userId }) {
+export default function QuoteHelperCard({ onSelectQuote, showCreateNew = false, onCreateNew, user }) {
   const { setField } = useShipmentStore()
   const [searchTerm, setSearchTerm] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [showAllLatest, setShowAllLatest] = useState(false)
 
   // useUserQuotes now returns { quotes, pagination } structure
-  const { data: quotesData, isLoading, isError } = useUserQuotes(userId, 0, 20)
+  const { data: quotesData, isLoading, isError } = useUserQuotes(user, 0, 20)
   const quotes = quotesData?.quotes || []
   
   console.log("Rendering QuoteHelperCard with quotes:", quotes)
