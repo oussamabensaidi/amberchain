@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import Navbar from "../Navbar";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
-export default function AuthLayout({ children, title = 'AMBERCHAINS' }) {
+export default function AuthLayout({ children, title = 'BOMBYX' }) {
   useDocumentTitle(title);
 
   return (

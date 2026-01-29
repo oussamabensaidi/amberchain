@@ -1,4 +1,4 @@
-## Amberchain
+## Bombyx
 
 Modern logistics dashboard built with React + Vite.
 

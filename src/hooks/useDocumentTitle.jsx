@@ -5,7 +5,7 @@ export function useDocumentTitle(title) {
     const { t, i18n } = useTranslation();
     useEffect(() => {
         if (title) {
-            title == 'AMBERCHAINS' ? document.title = title : document.title = `${t(title)} | AMBERCHAINS`
+            title == 'BOMBYX' ? document.title = title : document.title = `${t(title)} | BOMBYX`
         };
     }, [title, i18n.language]);
 }

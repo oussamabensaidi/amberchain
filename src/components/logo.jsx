@@ -1,4 +1,4 @@
-import logo from "@/assets/images/logo.webp"
+import logo from "@/assets/images/Bombyx.svg"
 import { cn } from "@/lib/utils"
 
 export default function Logo({className = ''}) {
@@ -8,7 +8,7 @@ export default function Logo({className = ''}) {
       alt="Logo"
       width="206"
       height="38"
-      className={cn('w-full h-auto', className)}
+      className={cn('w-full h-auto dark:brightness-150', className)}
     />
   )
 }

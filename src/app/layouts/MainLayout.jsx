@@ -5,7 +5,7 @@ import { AppSidebar } from "../dahsboardLayout/app-sidebar";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import LogoLink from "@/components/nav/LogoLink";
 
-export default function MainLayout({ children, title = 'AMBERCHAINS' }) {
+export default function MainLayout({ children, title = 'BOMBYX' }) {
 
   useDocumentTitle(title);
 

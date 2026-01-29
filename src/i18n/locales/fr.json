@@ -227,7 +227,7 @@
     },
     "loginForm": {
       "welcome": "Bon retour",
-      "subtitle": "Connectez-vous à votre compte AMBERCHAIN",
+      "subtitle": "Connectez-vous à votre compte Bombyx",
       "emailLabel": "E-mail",
       "passwordLabel": "Mot de passe",
       "forgotPassword": "Mot de passe oublié ?",
