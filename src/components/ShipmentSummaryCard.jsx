@@ -2,7 +2,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Package, MapPin, Ship, Train, Truck, Plane, ShoppingCart, ArrowRightLeft } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-export default function ShipmentSummaryCard({ data = {}, onAction }) {
+export default function ShipmentSummaryCard({ data = {}, onAction , ctaLabel = "Compare Options" }) {
   const [isMinimized, setIsMinimized] = useState(false);
 
   // Format addon display label
@@ -249,7 +249,7 @@ export default function ShipmentSummaryCard({ data = {}, onAction }) {
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 size="lg"
               >
-                Compare Options
+                {ctaLabel}
               </Button>
           </div>
 

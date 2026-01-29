@@ -48,7 +48,8 @@ export default function CompareOptions() {
           {/* Sticky Summary Card */}
           <div className="w-80 sticky top-4 h-fit">
             <ShipmentSummaryCard 
-              data={data} 
+              data={data}
+              ctaLabel={"Request Quote"} 
               onAction={handleTriggerSubmit} 
             />
           </div>
