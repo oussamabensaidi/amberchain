@@ -202,6 +202,7 @@ function buildLocation(prefix, src) {
     lat: src[`${prefix}Lat`] ? String(src[`${prefix}Lat`]) : "",
     lon: src[`${prefix}Lon`] ? String(src[`${prefix}Lon`]) : "",
     id: src[`${prefix}LocationId`] || 0,
+    unicode: src[`${prefix}Unicode`] || "",  // ← ADD THIS
     locationType: "PORT",
   };
 }
@@ -214,6 +215,7 @@ function flattenLocation(prefix, loc) {
     [`${prefix}CountryCode`]: loc.countryCode || "",
     [`${prefix}Lat`]: loc.lat || "",
     [`${prefix}Lon`]: loc.lon || "",
+    [`${prefix}Unicode`]: loc.unicode || "",  // ← ADD THIS
     [`${prefix}`]: loc.city ? `${loc.city}, ${loc.countryCode}` : "",
   };
 }
@@ -434,6 +436,15 @@ export function applyQuoteToStore(quote, setField) {
   setField("cargo", quote.cargo || {})
   setField("liftgate", quote.liftgate || {})
   setField("accsesConditions", quote.accsesConditions || "")
+
+
+  setField("returnUnicode", quote.returnUnicode || "")  // ← ADD THIS
+  setField("pickupUnicode", quote.pickupUnicode || "")  // ← ADD THIS
+  setField("plodUnicode", quote.plodUnicode || "")  // ← ADD THIS
+  setField("plorUnicode", quote.plorUnicode || "")  // ← ADD THIS
+  setField("podUnicode", quote.podUnicode || "")  // ← ADD THIS
+  setField("polUnicode", quote.polUnicode || "")  // ← ADD THIS
+
 
   if (quote.addons) {
     setField("addons", quote.addons)

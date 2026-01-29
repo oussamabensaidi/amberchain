@@ -1,30 +1,4 @@
 import axios from 'axios';
-import { getLocationCodes } from '@/lib/locationCodeMapper';
-
-// Helper function to extract city from location string (e.g., "Los Angeles, US" → "Los Angeles")
-const extractCity = (locationString) => {
-  if (!locationString) return '';
-  if (typeof locationString === 'string') {
-    return locationString.split(',')[0].trim();
-  }
-  return '';
-};
-
-// Helper function to extract port code from location data
-const extractPortCode = (locationData) => {
-  if (!locationData) return null;
-  // If it's already a code like "USLAX" or "DEHAM"
-  if (typeof locationData === 'string' && locationData.length === 5) {
-    return locationData;
-  }
-  
-  // If it has countryCode and city, try to construct or return what we have
-  if (locationData.countryCode) {
-    return locationData.countryCode;
-  }
-  
-  return null;
-};
 
 const submitCompareOptions = async (formData) => {
   const token = localStorage.getItem("token");
@@ -42,60 +16,61 @@ const submitCompareOptions = async (formData) => {
       }
     );
     
-    // Step 2: Extract location codes from formData - DYNAMIC from user input
-    // Use getLocationCodes to convert city/country to proper port codes
-    const locationCodes = getLocationCodes(
-      formData.polCity || extractCity(formData.pickUpPosition?.city),
-      formData.polCountry || formData.pickUpPosition?.country,
-      formData.polCountryCode || formData.pickUpPosition?.countryCode,
-      formData.podCity || extractCity(formData.deliveryPosition?.city),
-      formData.podCountry || formData.deliveryPosition?.country,
-      formData.podCountryCode || formData.deliveryPosition?.countryCode
-    );
+    // Step 2: Extract location codes for schedule API
+    const polCode = formData.pickUpPosition?.unicode || null;
+    const podCode = formData.deliveryPosition?.unicode || null;
+    const weight = formData.grossWeight || 100;
 
-    const polCode = formData.polLocationId || locationCodes.polCode;
-    const podCode = formData.podLocationId || locationCodes.podCode;
-    const weight = formData.grossWeight || formData.stuffingWeight || 100;
+    // DEBUG: Log location codes
+    console.log("Location codes extracted from formData:", {
+      polCode,
+      podCode,
+      polLocation: formData.pickUpPosition,
+      podLocation: formData.deliveryPosition
+    });
 
-    // Step 3: Call the /schedule/points-to-points endpoint with GET method
-    const schedulePayload = {
-      cargoType: "DRY",
-      placeOfDeliveryCode: podCode,
-      placeOfReceiptCode: polCode,
-      stuffingVolume: null,
-      stuffingWeight: weight
-    };
+    // Step 3: Call schedule API only if we have valid location codes
+    let scheduleData = [];
+    
+    if (polCode && podCode) {
+      const schedulePayload = {
+        cargoType: "DRY",
+        placeOfDeliveryCode: podCode,
+        placeOfReceiptCode: polCode,
+        stuffingVolume: null,
+        stuffingWeight: weight
+      };
 
-    let scheduleData = null;
-    try {
-      const scheduleResponse = await axios.post(
-        `${import.meta.env.VITE_APP_DOMAIN}/schedule/points-to-points`,
-        schedulePayload,
-        {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
+      try {
+        const scheduleResponse = await axios.post(
+          `${import.meta.env.VITE_APP_DOMAIN}/schedule/points-to-points`,
+          schedulePayload,
+          {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
           }
-        }
-      );
+        );
 
-      scheduleData = scheduleResponse.data;
-      console.log("Schedule response:", scheduleData);
-      
-      // Ensure scheduleData is always an array
-      if (scheduleData && !Array.isArray(scheduleData)) {
-        scheduleData = [scheduleData];
+        scheduleData = scheduleResponse.data;
+        
+        // Ensure scheduleData is always an array
+        if (scheduleData && !Array.isArray(scheduleData)) {
+          scheduleData = [scheduleData];
+        }
+      } catch (scheduleError) {
+        console.warn("Schedule request failed (non-blocking):", scheduleError.message);
+        scheduleData = [];
       }
-    } catch (scheduleError) {
-      console.warn("Schedule request failed (non-blocking):", scheduleError.message);
-      // Don't throw - schedule is optional
-      scheduleData = [];
+    } else {
+      console.warn("Skipping schedule API call - missing location codes (polCode or podCode)");
     }
 
     // Return both responses
     return {
       quote: quoteResponse.data,
-      schedule: scheduleData || [],
+      schedule: scheduleData,
       trackId: quoteResponse.data.trackId
     };
   } catch (error) {

@@ -117,12 +117,13 @@ export default function ModeSelector({ mode, setField, error, forwardedRef, show
                     onChange={(v) => {
                       if (v && typeof v === 'object') {
                         setField(field, v.display_name)
-                        setField(`${field}City`, v.city)
-                        setField(`${field}Country`, v.country)
+                        setField(`${field}City`, v.cityName || v.city)
+                        setField(`${field}Country`, v.countryName || v.country)
                         setField(`${field}CountryCode`, v.countryCode)
                         setField(`${field}Lat`, v.lat)
                         setField(`${field}Lon`, v.lon)
                         setField(`${field}LocationId`, v.id)
+                        setField(`${field}Unicode`, v.unicode)  // ← ADD THIS
                       } else {
                         setField(field, v)
                       }

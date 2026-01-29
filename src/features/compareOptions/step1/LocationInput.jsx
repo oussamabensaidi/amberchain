@@ -56,26 +56,28 @@ const LocationInput = ({
       }
 
       // Transform results to expected format
-      const transformedResults = results.map(item => ({
-        display_name: item.display_name,
-        name: item.name,
-        city: item.city,
-        country: item.country,
-        countryCode: item.country_code || "",
-        lat: item.lat,
-        lon: item.lon,
-        id: item.code || item.id || 0,
-        locationType: item.locationType,
-        code: item.code,
-      }))
+const transformedResults = results.map(item => ({
+  display_name: item.display_name,
+  name: item.name,
+  cityName: item.city,           // ← Changed to cityName for consistency
+  countryName: item.country,     // ← Changed to countryName for consistency
+  countryCode: item.countryCode || item.country_code || "",
+  lat: item.lat,
+  lon: item.lon,
+  id: item.code || item.id || 0,
+  unicode: item.unicode || item.unCode || "",   // ← Use unicode from API response
+  locationType: item.locationType,
+  code: item.code,
+}))
 
       setSuggestions(transformedResults)
-    } catch (error) {
-      console.error("Error fetching locations:", error)
-      setSuggestions([])
-    } finally {
-      setIsLoading(false)
-    }
+    
+  } catch (error) {
+    console.error("Error fetching locations:", error)
+    setSuggestions([])
+  } finally {
+    setIsLoading(false)
+  }
   }
 
   // Debounce the search

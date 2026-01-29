@@ -120,12 +120,13 @@ export default function ShipmentTypeSection({ mode, shipmentType, setField, erro
                         onChange={(v) => {
                           if (v && typeof v === 'object') {
                             setField('pickupLocation', v.display_name)
-                            setField('pickupCity', v.city)
-                            setField('pickupCountry', v.country)
+                            setField('pickupCity', v.cityName || v.city)
+                            setField('pickupCountry', v.countryName || v.country)
                             setField('pickupCountryCode', v.countryCode)
                             setField('pickupLat', v.lat)
                             setField('pickupLon', v.lon)
                             setField('pickupLocationId', v.id)
+                            setField('pickupUnicode', v.unicode)
                           } else {
                             setField('pickupLocation', v)
                           }
@@ -153,12 +154,13 @@ export default function ShipmentTypeSection({ mode, shipmentType, setField, erro
                         onChange={(v) => {
                           if (v && typeof v === 'object') {
                             setField('returnLocation', v.display_name)
-                            setField('returnCity', v.city)
-                            setField('returnCountry', v.country)
+                            setField('returnCity', v.cityName || v.city)
+                            setField('returnCountry', v.countryName || v.country)
                             setField('returnCountryCode', v.countryCode)
                             setField('returnLat', v.lat)
                             setField('returnLon', v.lon)
                             setField('returnLocationId', v.id)
+                            setField('returnUnicode', v.unicode)
                           } else {
                             setField('returnLocation', v)
                           }

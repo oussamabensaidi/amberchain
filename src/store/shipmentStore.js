@@ -154,6 +154,12 @@ export const useShipmentStore = create((set) => ({
       extraFreeTime: false,
       reduceEmission: false,
     },
+    polUnicode: "",
+    podUnicode: "",
+    plorUnicode: "",
+    plodUnicode: "",
+    pickupUnicode: "",
+    returnUnicode: "",
   },
 
   setField: (key, value) =>
@@ -330,6 +336,12 @@ export const useShipmentStore = create((set) => ({
         extraFreeTime: false,
         reduceEmission: false,
     },
+        polUnicode: "",
+    podUnicode: "",
+    plorUnicode: "",
+    plodUnicode: "",
+    pickupUnicode: "",
+    returnUnicode: "",
       },
     })
 }))

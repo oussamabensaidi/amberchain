@@ -6,19 +6,23 @@ import { fromApiShipment } from "../mappers/shipmentMapper"
 /**
  * Fetch user quotes with server-side pagination and filtering
  * @param {Object} params - Fetch parameters
- * @param {string} params.userId - User ID
+ * @param {Object} params.user - User object (contains id and role)
  * @param {number} params.page - Page number (0-indexed)
  * @param {number} params.size - Page size
  * @param {Object} params.filters - API filters (status, shipmentMode, cargoType, etc.)
  * @returns {Promise<Object>} Paginated response with quotes
  */
-const fetchUserQuotes = async ({ userId, page = 0, size = 10, filters = {} }) => {
+const fetchUserQuotes = async ({ user, page = 0, size = 10, filters = {} }) => {
   const token = localStorage.getItem('token')
   
-  // Build request body with userId and filters only
+  // Build request body - include userId only if user is not ADMIN (for ADMIN, global search)
   const body = {
-    userId,
     ...filters, // status, shipmentMode, cargoType, etc.
+  }
+  
+  // Only add userId if user role is not ADMIN
+  if (user && user.id && user.role?.nom !== 'ADMIN') {
+    body.userId = user.id
   }
 
   // Build URL with pagination as query parameters
@@ -28,6 +32,7 @@ const fetchUserQuotes = async ({ userId, page = 0, size = 10, filters = {} }) =>
 
   console.log('Fetching from URL:', url.toString());
   console.log('Request body:', body);
+  console.log('User role:', user?.role?.nom, 'IsAdmin:', user?.role?.nom === 'ADMIN');
 
   try {
     const response = await axios.post(
@@ -181,29 +186,29 @@ const buildApiFilters = (columnFilters = []) => {
 
 /**
  * Hook for fetching user quotes with server-side pagination and filtering
- * @param {string} userId - User ID
+ * @param {Object} user - User object (contains id and role)
  * @param {number} pageIndex - Current page (0-indexed)
  * @param {number} pageSize - Items per page
  * @param {Array} columnFilters - DataTable column filters
  * @returns {Object} Query result with data, loading states, pagination metadata
  */
-export const useUserQuotes = (userId, pageIndex = 0, pageSize = 10, columnFilters = []) => {
+export const useUserQuotes = (user, pageIndex = 0, pageSize = 10, columnFilters = []) => {
   const apiFilters = buildApiFilters(columnFilters)
 
-  console.log('useUserQuotes called with:', { userId, pageIndex, pageSize, columnFilters });
+  console.log('useUserQuotes called with:', { user, pageIndex, pageSize, columnFilters });
 
   return useQuery({
-    queryKey: ['userQuotes', userId, pageIndex, pageSize, apiFilters],
+    queryKey: ['userQuotes', user?.id, pageIndex, pageSize, apiFilters],
     queryFn: () => {
       console.log('Fetching quotes with pageIndex:', pageIndex, 'pageSize:', pageSize);
       return fetchUserQuotes({
-        userId,
+        user,
         page: pageIndex,
         size: pageSize,
         filters: apiFilters,
       });
     },
-    enabled: !!userId,
+    enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
     select: (data) => {
       console.log('API Response:', data);
