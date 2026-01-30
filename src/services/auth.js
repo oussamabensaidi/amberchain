@@ -4,9 +4,10 @@ import apiClient from "@/lib/apiClient";
 /**
  * LOGIN USER
  * @param {Object} payload - { username/email, password }
+ * @param {boolean} isWordPressLogin - whether this is a WP redirect login
  * @returns {Object} - { token, user, ... }
  */
-export const loginUser = async (payload) => {
+export const loginUser = async (payload, isWordPressLogin = false) => {
   try {
     // Transform email to username if email is provided
     const loginPayload = {
@@ -14,6 +15,12 @@ export const loginUser = async (payload) => {
       password: payload.password
     };
     const { data } = await apiClient.post("/public/signin", loginPayload);
+    
+    // Mark response with WP context if needed
+    if (isWordPressLogin) {
+      data._isWordPressLogin = true;
+    }
+    
     return data;
   } catch (error) {
     const message =
@@ -25,12 +32,19 @@ export const loginUser = async (payload) => {
 /**
  * REGISTER USER
  * @param {Object} userData - { email, password, firstName, lastName, ... }
+ * @param {boolean} isWordPressRegister - whether this is a WP redirect registration
  * @returns {Object} - { user, token, ... }
  */
-export const registerUser = async (userData) => {
+export const registerUser = async (userData, isWordPressRegister = false) => {
   try {
     const { data } = await apiClient.post("/public/signup", userData);
     console.debug('[auth] registerUser response:', data);
+    
+    // Mark response with WP context if needed
+    if (isWordPressRegister) {
+      data._isWordPressRegister = true;
+    }
+    
     return data;
   } catch (error) {
     // Log error details for easier debugging
@@ -49,7 +63,7 @@ export const registerUser = async (userData) => {
       throw e;
     }
     // If we flagged email-taken earlier, pass that through
-  if (error.isEmailTakenError) throw error;
+    if (error.isEmailTakenError) throw error;
 
     // If server returned 409 or a message, surface it
     if (error.response?.status === 409) {
@@ -87,6 +101,8 @@ export const logoutUser = () => {
   try {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("user_data");
   } catch (err) {
     console.warn("Failed to clear local storage:", err);
   }

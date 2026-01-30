@@ -8,20 +8,28 @@ import { useTranslation } from "react-i18next";
 import { useMutation } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { handleApiRequest } from '@/lib/handleApiRequest';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { loginFields } from '@/constants/formFields';
-import { loginUser , getConnectedUser } from '@/services/auth';
+import { loginUser, getConnectedUser } from '@/services/auth';
 import { toast } from 'sonner';
 
 export default function LoginForm() {
     const { t } = useTranslation();
+    const [searchParams] = useSearchParams();
     const [agreedToTerms, setAgreedToTerms] = useState(true);
     const [agreedToPrivacy, setAgreedToPrivacy] = useState(true);
     const [showAgreementError, setShowAgreementError] = useState(false);
     const [manualAgreement, setManualAgreement] = useState(true);
     const navigate = useNavigate();
     const { setAuth } = useAuthStore();
+
+    // Check if this is a WordPress redirect login
+    const redirectBack = searchParams.get('redirect_back');
+    const isWordPressLogin = redirectBack && (
+        redirectBack.includes('http://client.lahza.ma/') || 
+        redirectBack.includes('https://client.lahza.ma/')
+    );
 
     const { control, handleSubmit, formState: { isValid, isSubmitting } } = useForm({
         mode: 'onChange',
@@ -31,8 +39,23 @@ export default function LoginForm() {
         }), {})
     });
 
-    const mutation = useMutation({
-        onSuccess: async (response) => {
+    const onFormSubmit = async (data) => {
+        const payload = {
+            username: data.email,
+            password: data.password,
+        };
+        
+        console.log('Login attempt:', { 
+            email: data.email, 
+            isWordPressLogin 
+        });
+
+        try {
+            // Call the login API
+            const response = await loginUser(payload, isWordPressLogin);
+            
+            console.log("✅ Login response:", response);
+
             // Server-side login error message
             if (response?.loginError) {
                 toast.error(response.loginError);
@@ -47,85 +70,76 @@ export default function LoginForm() {
                 try {
                     resolvedUser = await getConnectedUser();
                 } catch (e) {
-                    // fallback - still allow login if token is present
                     console.warn('Failed to fetch connected user after login:', e);
                 }
             }
 
-            if (token) {
-                // Persist auth in store
-                useAuthStore.getState().setAuth(resolvedUser || null, token);
-
-                // Check if user needs email verification and redirect them to verify page
-                const status = resolvedUser?.status || resolvedUser?.userStatus || null;
-                const needsVerification =
-                    status === 'WAITING_FOR_MAIL_CONFIRMATION' ||
-                    status === 'WAITING_FOR_EMAIL_CONFIRMATION' ||
-                    resolvedUser?.emailVerified === false ||
-                    resolvedUser?.verified === false;
-
-                if (needsVerification) {
-                    toast("Your account requires email confirmation. Please verify your email to access the app.");
-                    navigate('/auth/emailVerify', { replace: true });
-                    return;
-                }
-
-                // Otherwise allow access
-                navigate('/dashboard');
+            if (!token) {
+                toast.error('Invalid server response - no token received.');
                 return;
             }
 
-            toast.error('Invalid server response.');
-        },
+            // IMPORTANT: Clear old data first to prevent concatenation
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            localStorage.removeItem("jwt");
+            localStorage.removeItem("user_data");
 
-        mutationFn: loginUser,
-    });
+            // Store auth data - SINGLE SOURCE OF TRUTH
+            localStorage.setItem("token", token);
+            if (resolvedUser) {
+                localStorage.setItem("user", JSON.stringify(resolvedUser));
+            }
 
-    const onFormSubmit = async (data) => {
-        const payload= {
-            username: data.email,
-            password: data.password,
-        }
-        console.log('login payload' , data)
-
-        try {
-         const apiResponse = await handleApiRequest(
-    () => mutation.mutateAsync(payload),
-    {
-        loading: t('loginForm.notifications.loading'),
-        success: t('loginForm.notifications.success'),
-        error: t('common.generic-error'),
-    }
-);
-
-console.log("✅ Login response:", apiResponse);
-
-            // If the response includes the user object and token:
-            if (apiResponse?.user) {
-                localStorage.setItem("user", JSON.stringify(apiResponse.user));
-                localStorage.setItem("token", apiResponse.token);
-                // populate the global auth store so layouts/components update
-                setAuth(apiResponse.user, apiResponse.token);
-
-                const status = apiResponse.user?.status || apiResponse.user?.userStatus || null;
-                const needsVerification =
-                    status === 'WAITING_FOR_MAIL_CONFIRMATION' ||
-                    status === 'WAITING_FOR_EMAIL_CONFIRMATION' ||
-                    apiResponse.user?.emailVerified === false ||
-                    apiResponse.user?.verified === false;
-
-                if (needsVerification) {
-                    toast("Your account requires email confirmation. Please verify your email to access the app.");
-                    navigate('/auth/emailVerify', { replace: true });
-                } else {
-                    // redirect to dashboard
-                    navigate('/dashboard', { replace: true });
+            // For WordPress login, ALSO store in wp-compatible keys
+            if (isWordPressLogin) {
+                localStorage.setItem("jwt", token);
+                if (resolvedUser) {
+                    localStorage.setItem("user_data", JSON.stringify(resolvedUser));
                 }
             }
 
+            // Update auth store
+            setAuth(resolvedUser || null, token);
+
+            // Check if user needs email verification
+            const status = resolvedUser?.status || resolvedUser?.userStatus || null;
+            const needsVerification =
+                status === 'WAITING_FOR_MAIL_CONFIRMATION' ||
+                status === 'WAITING_FOR_EMAIL_CONFIRMATION' ||
+                resolvedUser?.emailVerified === false ||
+                resolvedUser?.verified === false;
+
+            if (needsVerification) {
+                toast("Your account requires email confirmation. Please verify your email to access the app.");
+                navigate('/auth/emailVerify', { replace: true });
+                return;
+            }
+
+            // Handle WordPress redirect
+            if (isWordPressLogin) {
+                const decodedRedirect = decodeURIComponent(redirectBack);
+                const redirectUrl = new URL(decodedRedirect);
+                redirectUrl.searchParams.set('token', token);
+                
+                toast.success('Login successful! Redirecting to WordPress...');
+                
+                console.log('🔄 Redirecting to:', redirectUrl.toString());
+                
+                // Small delay to ensure localStorage is written
+                setTimeout(() => {
+                    window.location.href = redirectUrl.toString();
+                }, 800);
+                return;
+            }
+
+            // Normal dashboard redirect
+            toast.success(t('loginForm.notifications.success'));
+            navigate('/dashboard', { replace: true });
 
         } catch (err) {
-            console.error(err)
+            console.error('❌ Login error:', err);
+            toast.error(err.message || t('common.generic-error'));
         }
     };
 
@@ -133,6 +147,12 @@ console.log("✅ Login response:", apiResponse);
 
     return (
         <div className="p-6 md:p-8">
+            {isWordPressLogin && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+                    🔗 You'll be redirected back to WordPress after login
+                </div>
+            )}
+            
             <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
                     <h1 className="text-2xl font-bold">{t('loginForm.welcome')}</h1>
@@ -211,7 +231,10 @@ console.log("✅ Login response:", apiResponse);
 
                 <div className="text-center text-sm">
                     {t('loginForm.noAccount')}{' '}
-                    <a href="/auth/register" className="underline underline-offset-4">
+                    <a 
+                        href={isWordPressLogin ? `/auth/register?redirect_back=${redirectBack}` : "/auth/register"} 
+                        className="underline underline-offset-4"
+                    >
                         {t('loginForm.signUp')}
                     </a>
                 </div>
