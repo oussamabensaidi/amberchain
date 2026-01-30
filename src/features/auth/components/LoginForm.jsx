@@ -12,6 +12,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { loginFields } from '@/constants/formFields';
 import { loginUser, getConnectedUser } from '@/services/auth';
+import storage from '@/lib/storage';
 import { toast } from 'sonner';
 
 export default function LoginForm() {
@@ -80,23 +81,12 @@ export default function LoginForm() {
             }
 
             // IMPORTANT: Clear old data first to prevent concatenation
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            localStorage.removeItem("jwt");
-            localStorage.removeItem("user_data");
+            storage.clearAuth();
 
             // Store auth data - SINGLE SOURCE OF TRUTH
-            localStorage.setItem("token", token);
+            storage.setToken(token);
             if (resolvedUser) {
-                localStorage.setItem("user", JSON.stringify(resolvedUser));
-            }
-
-            // For WordPress login, ALSO store in wp-compatible keys
-            if (isWordPressLogin) {
-                localStorage.setItem("jwt", token);
-                if (resolvedUser) {
-                    localStorage.setItem("user_data", JSON.stringify(resolvedUser));
-                }
+                storage.setUser(resolvedUser);
             }
 
             // Update auth store

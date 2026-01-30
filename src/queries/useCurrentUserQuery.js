@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import storage from '@/lib/storage';
 
 
 const fetchCurrentUser = async () => {
-  // Only fetch when a token is present in localStorage.
+  // Only fetch when a token is present in session storage.
   // This avoids auto-authenticating users when no token exists (e.g., after logout).
-  const token = localStorage.getItem('token');
+  const token = storage.getToken();
   if (!token) {
     return null;
   }

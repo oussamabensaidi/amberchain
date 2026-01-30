@@ -10,21 +10,21 @@
 // export default useAuthStore;
 
 import { create } from "zustand";
+import storage from "@/lib/storage";
 
 const useAuthStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem("user")) || null,
-  token: localStorage.getItem("token") || null,
+  user: storage.getUser() || null,
+  token: storage.getToken() || null,
 
   setAuth: (user, token) => {
     set({ user, token });
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("token", token);
+    storage.setUser(user);
+    storage.setToken(token);
   },
 
   logout: () => {
     set({ user: null, token: null });
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    storage.clearAuth();
   },
 }));
 

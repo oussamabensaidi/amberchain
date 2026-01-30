@@ -1,5 +1,6 @@
 // src/services/auth.js
 import apiClient from "@/lib/apiClient";
+import storage from "@/lib/storage";
 
 /**
  * LOGIN USER
@@ -99,11 +100,8 @@ export const getConnectedUser = async () => {
  */
 export const logoutUser = () => {
   try {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("jwt");
-    localStorage.removeItem("user_data");
-  } catch (err) {
-    console.warn("Failed to clear local storage:", err);
+    storage.clearAuth();
+  }catch (err) {
+    console.warn("Failed to clear session storage:", err);
   }
 };

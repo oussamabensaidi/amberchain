@@ -1,7 +1,8 @@
 import axios from 'axios';
+import storage from '@/lib/storage';
 
 const submitCompareOptions = async (formData) => {
-  const token = localStorage.getItem("token");
+  const token = storage.getToken();
 
   try {
     // Step 1: Create a quote using the payload

@@ -1,6 +1,7 @@
 // queries/useUserQuotes.js
 import { useQuery } from "@tanstack/react-query"
 import axios from "axios"
+import storage from '@/lib/storage'
 import { fromApiShipment } from "../mappers/shipmentMapper"
 
 /**
@@ -13,7 +14,7 @@ import { fromApiShipment } from "../mappers/shipmentMapper"
  * @returns {Promise<Object>} Paginated response with quotes
  */
 const fetchUserQuotes = async ({ user, page = 0, size = 10, filters = {} }) => {
-  const token = localStorage.getItem('token')
+  const token = storage.getToken()
   
   // Build request body - include userId only if user is not ADMIN (for ADMIN, global search)
   const body = {

@@ -1,9 +1,10 @@
 // src/lib/apiClient.js
 import axios from "axios";
+import storage from "@/lib/storage";
 
 // Sanitize base URL (strip accidental surrounding quotes from .env)
 const baseURL = (import.meta.env.VITE_APP_DOMAIN || "").replace(/^['\"]|['\"]$/g, '');
-const token = localStorage.getItem("token");
+const token = storage.getToken();
 const apiClient = axios.create({
   baseURL,
   headers: {
@@ -14,7 +15,7 @@ const apiClient = axios.create({
 
 // Automatically attach token if available
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = storage.getToken();
   // Do not attach Authorization header for public endpoints (signin/signup)
     const isPublicEndpoint = config.url && /\/public\//.test(config.url);
   if (token && !isPublicEndpoint) {
@@ -58,9 +59,8 @@ apiClient.interceptors.response.use(
 
     // Handle token expiration (401 Unauthorized)
     if (error.response?.status === 401) {
-      // Clear token and user from localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      // Clear token and user from session storage
+      storage.clearAuth();
 
       // Reload the page to trigger AuthRedirect and redirect to login
       window.location.href = '/auth/login';
