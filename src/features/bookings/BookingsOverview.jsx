@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { DataTable } from "@/components/tables/DataTable";
 import { getColumns } from "./columns";
-import BookingDetails from "./BookingDetails.jsx";
+import BookingDetails from "./BookingDetails";
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useBookingsQuery } from "@/queries/useBookingsQuery";
-import DashNav from "@/components/dashboard/DashNav.jsx";
-import DashboardSearch from "@/components/dashboard/DashboardSearch.jsx";
+import DashNav from "@/components/dashboard/DashNav";
+import DashboardSearch from "@/components/dashboard/DashboardSearch";
 import { buildStatusFilterOptions, buildTabsFilterConfig } from "./utils/filters";
 import SuccessBanner from "@/components/ui/SuccessBanner";
 import { useSubmittedBookingBanner } from "@/hooks/useSubmittedBookingBanner";

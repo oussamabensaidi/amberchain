@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { DataTable } from "@/components/tables/DataTable";
 import { getColumns } from "./columns";
-import QuotationDetails from "./QuotationDetails.jsx";
+import QuotationDetails from "./QuotationDetails";
 import { useMemo, useState, useEffect } from "react";
 import DashboardSearch from "@/components/dashboard/DashboardSearch";
 import DashNav from "@/components/dashboard/DashNav";

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import DashNav from "@/components/dashboard/DashNav";
 import { DataTable } from "@/components/tables/DataTable";
 import { getColumns } from "./columns";
-import ShipmentDetails from "./ShipmentDetails.jsx";
+import ShipmentDetails from "./ShipmentDetails";
 import { useMemo, useState } from "react";
 import DashboardSearch from "@/components/dashboard/DashboardSearch";
 import { useShipmentsQuery } from "@/queries/useShipmentsQuery";
