@@ -1,14 +1,3 @@
-// import { create } from 'zustand';
-
-// const useAuthStore = create((set) => ({
-//   user: null,
-//   isLoading: true,
-//   setAuth: (user) => set({ user, isLoading: false }),
-//   logout: () => set({ user: null, isLoading: false }),
-// }));
-
-// export default useAuthStore;
-
 import { create } from "zustand";
 import storage from "@/lib/storage";
 

@@ -17,6 +17,7 @@ import {toApiShipment} from "@/mappers/shipmentMapper"
 import submitCompareOptions from "@/services/CompareOptionsService"
 import PopUp from "./PopUp"
 import { toast } from 'sonner';
+import { useSearchParams } from "react-router-dom"
 
 const ShipmentForm = forwardRef(({ onFormComplete, enableServicePopup = true }, ref) => {
   const { data, setField, setComparisonResults } = useShipmentStore()
@@ -44,6 +45,27 @@ const ShipmentForm = forwardRef(({ onFormComplete, enableServicePopup = true }, 
       setField("cargoType", "")
     }
   }, [])
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const origin = params.get('origin');
+  const destination = params.get('destination');
+
+  if (origin && origin.length > 2) {
+    setField('origin', origin);
+    // Optionally set POL if not already set
+    if (!data.pol) {
+      setField('pol', origin);
+    }
+  }
+
+  if (destination && destination.length > 2) {
+    setField('destination', destination);
+    // Optionally set POD if not already set
+    if (!data.pod) {
+      setField('pod', destination);
+    }
+  }
+}, []);
 useImperativeHandle(ref, () => ({
     requestSubmit: () => {
       handleSubmit({ preventDefault: () => {} });

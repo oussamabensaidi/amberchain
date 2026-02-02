@@ -25,12 +25,19 @@ export default function LoginForm() {
     const navigate = useNavigate();
     const { setAuth } = useAuthStore();
 
-    // Check if this is a WordPress redirect login
+    // Extract ALL params
     const redirectBack = searchParams.get('redirect_back');
-    const isWordPressLogin = redirectBack && (
-        redirectBack.includes('http://client.lahza.ma/') || 
-        redirectBack.includes('https://client.lahza.ma/')
+    const origin = searchParams.get('origin');
+    const destination = searchParams.get('destination');
+    const intent = searchParams.get('intent');
+
+    const decodedRedirectBack = redirectBack ? decodeURIComponent(redirectBack) : null;
+    const isWordPressLogin = decodedRedirectBack && (
+        decodedRedirectBack.includes('http://client.lahza.ma/') || 
+        decodedRedirectBack.includes('https://client.lahza.ma/')
     );
+
+    console.log('Login params:', { origin, destination, intent, redirectBack });
 
     const { control, handleSubmit, formState: { isValid, isSubmitting } } = useForm({
         mode: 'onChange',
@@ -48,16 +55,15 @@ export default function LoginForm() {
         
         console.log('Login attempt:', { 
             email: data.email, 
-            isWordPressLogin 
+            isWordPressLogin,
+            hasFormData: !!(origin && destination)
         });
 
         try {
-            // Call the login API
             const response = await loginUser(payload, isWordPressLogin);
             
             console.log("✅ Login response:", response);
 
-            // Server-side login error message
             if (response?.loginError) {
                 toast.error(response.loginError);
                 return;
@@ -65,7 +71,6 @@ export default function LoginForm() {
 
             const { token, user } = response || {};
 
-            // If token present but no user, try to fetch connected user
             let resolvedUser = user;
             if (token && !resolvedUser) {
                 try {
@@ -79,20 +84,23 @@ export default function LoginForm() {
                 toast.error('Invalid server response - no token received.');
                 return;
             }
-
-            // IMPORTANT: Clear old data first to prevent concatenation
+    console.log('🔍 Debug params:', { 
+        origin, 
+        destination, 
+        intent,
+        hasOrigin: !!origin,
+        hasDestination: !!destination,
+        intentIsSearch: intent === 'search'
+    });
+            // Clear and store auth
             storage.clearAuth();
-
-            // Store auth data - SINGLE SOURCE OF TRUTH
             storage.setToken(token);
             if (resolvedUser) {
                 storage.setUser(resolvedUser);
             }
-
-            // Update auth store
             setAuth(resolvedUser || null, token);
 
-            // Check if user needs email verification
+            // Check verification status
             const status = resolvedUser?.status || resolvedUser?.userStatus || null;
             const needsVerification =
                 status === 'WAITING_FOR_MAIL_CONFIRMATION' ||
@@ -106,24 +114,47 @@ export default function LoginForm() {
                 return;
             }
 
-            // Handle WordPress redirect
-            if (isWordPressLogin) {
-                const decodedRedirect = decodeURIComponent(redirectBack);
-                const redirectUrl = new URL(decodedRedirect);
+           // ✅ PRIORITY 1: Handle form data from WordPress (origin + destination)
+if (origin && destination) {
+    console.log('✅ Origin and destination found! Redirecting to compare-options');
+    console.log('Origin:', origin);
+    console.log('Destination:', destination);
+    
+    const searchParams = new URLSearchParams({
+        origin,
+        destination
+    });
+    
+    const finalUrl = `/compare-options?${searchParams.toString()}`;
+    console.log('🚀 Navigating to:', finalUrl);
+    
+    toast.success('Login successful! Loading your search...');
+    navigate(finalUrl, { replace: true });
+    return;
+}
+
+console.log('⚠️ No origin/destination, checking WordPress redirect...');
+
+            // ✅ PRIORITY 2: Handle WordPress redirect with token
+            if (isWordPressLogin && redirectBack) {
+                const redirectUrl = new URL(redirectBack);
                 redirectUrl.searchParams.set('token', token);
+                
+                // Pass origin/destination if they exist
+                if (origin) redirectUrl.searchParams.set('origin', origin);
+                if (destination) redirectUrl.searchParams.set('destination', destination);
                 
                 toast.success('Login successful! Redirecting to WordPress...');
                 
                 console.log('🔄 Redirecting to:', redirectUrl.toString());
                 
-                // Small delay to ensure localStorage is written
                 setTimeout(() => {
                     window.location.href = redirectUrl.toString();
                 }, 800);
                 return;
             }
 
-            // Normal dashboard redirect
+            // ✅ PRIORITY 3: Default dashboard redirect
             toast.success(t('loginForm.notifications.success'));
             navigate('/dashboard', { replace: true });
 
@@ -133,15 +164,25 @@ export default function LoginForm() {
         }
     };
 
+    // Helper function to build URL with params
+
+
     const isReadyToSubmit = isValid && agreedToTerms && agreedToPrivacy;
 
     return (
         <div className="p-6 md:p-8">
+            {(origin && destination) && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+                    🔍 Searching: {origin} → {destination}
+                </div>
+            )}
+            
             {isWordPressLogin && (
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
                     🔗 You'll be redirected back to WordPress after login
                 </div>
             )}
+            
             
             <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
